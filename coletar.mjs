@@ -54,7 +54,8 @@ async function supa(tabela, linhas, upsert = false) {
     method: 'POST',
     headers: {
       apikey: env.SUPABASE_SERVICE_KEY,
-      Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY,
+      // chaves novas (sb_secret_...) vão só no apikey; chaves antigas (JWT) também no Authorization
+      ...(env.SUPABASE_SERVICE_KEY.startsWith('sb_') ? {} : { Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }),
       'Content-Type': 'application/json',
       Prefer: upsert ? 'resolution=merge-duplicates,return=minimal' : 'return=minimal',
     },
