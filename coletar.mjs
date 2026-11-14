@@ -20,20 +20,28 @@ const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v)
 
 async function loginGcom() {
   const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, locale: 'pt-BR' });
   try {
-    const page = await browser.newPage();
-    await page.goto('https://www2.gcom.com.br/novoerp/', { waitUntil: 'networkidle' });
-    await page.getByPlaceholder(/empresa/i).fill(env.GCOM_EMPRESA);
-    let user = page.getByPlaceholder(/usu[aá]rio|login|user/i);
-    if (!(await user.count())) user = page.locator('input:not([type="password"]):not([type="hidden"])').nth(1);
-    await user.first().fill(env.GCOM_USUARIO);
-    await page.locator('input[type="password"]').first().fill(env.GCOM_SENHA);
+    await page.goto('https://www2.gcom.com.br/novoerp/', { waitUntil: 'domcontentloaded' });
+    const senha = page.locator('input[type="password"]').first();
+    await senha.waitFor({ state: 'visible', timeout: 60000 });
+    // A tela tem 3 campos visíveis, nesta ordem: Empresa, Usuário, Senha
+    const campos = page.locator('input:visible:not([type="hidden"]):not([type="checkbox"])');
+    const n = await campos.count();
+    console.log('Campos visíveis na tela de login:', n);
+    await campos.nth(0).fill(env.GCOM_EMPRESA);
+    await campos.nth(1).fill(env.GCOM_USUARIO);
+    await senha.fill(env.GCOM_SENHA);
     await page.getByRole('button', { name: /login|entrar/i }).first().click();
     await page.waitForFunction(() => !!localStorage.getItem('jwtToken'), null, { timeout: 60000 });
     return await page.evaluate(() => {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
       return { token: localStorage.getItem('jwtToken'), emp: u.id_emp_gcom, pes: u.id_pes_usu };
     });
+  } catch (e) {
+    console.error('Falhou no login. Endereço atual:', page.url());
+    await page.screenshot({ path: 'erro-login.png', fullPage: true }).catch(() => {});
+    throw e;
   } finally {
     await browser.close();
   }
