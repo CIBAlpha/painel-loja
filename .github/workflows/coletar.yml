@@ -1,0 +1,30 @@
+name: Coletar vendas do Gcom
+
+on:
+  schedule:
+    # A cada 15 min, das 10h às 23h59 (horário de Brasília = UTC-3)
+    - cron: '*/15 13-23 * * *'
+    - cron: '*/15 0-2 * * *'
+  workflow_dispatch: {}   # botão "Run workflow" para rodar na hora
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar robô
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Coletar
+        run: node coletar.mjs
+        env:
+          GCOM_EMPRESA: ${{ secrets.GCOM_EMPRESA }}
+          GCOM_USUARIO: ${{ secrets.GCOM_USUARIO }}
+          GCOM_SENHA: ${{ secrets.GCOM_SENHA }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
