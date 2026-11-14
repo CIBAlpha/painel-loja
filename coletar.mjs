@@ -21,6 +21,8 @@ const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v)
 async function loginGcom() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, locale: 'pt-BR' });
+  page.on('response', (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.url().slice(0, 120)); });
+  page.on('requestfailed', (r) => console.log('Falha de rede:', r.url().slice(0, 120), r.failure()?.errorText));
   try {
     await page.goto('https://www2.gcom.com.br/novoerp/', { waitUntil: 'domcontentloaded' });
     const senha = page.locator('input[type="password"]').first();
@@ -40,6 +42,13 @@ async function loginGcom() {
     });
   } catch (e) {
     console.error('Falhou no login. Endereço atual:', page.url());
+    try {
+      console.error('Título:', await page.title());
+      console.error('Texto da tela:', (await page.locator('body').innerText()).slice(0, 600).replace(/\s+/g, ' '));
+      console.error('Inputs:', JSON.stringify(await page.$$eval('input', (els) => els.map((e) => [e.type, e.placeholder, e.offsetParent !== null]))));
+      const html = await page.content();
+      console.error('Tamanho do HTML:', html.length, '| início:', html.slice(0, 300).replace(/\s+/g, ' '));
+    } catch {}
     await page.screenshot({ path: 'erro-login.png', fullPage: true }).catch(() => {});
     throw e;
   } finally {
