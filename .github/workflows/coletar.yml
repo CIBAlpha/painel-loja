@@ -28,3 +28,10 @@ jobs:
           GCOM_SENHA: ${{ secrets.GCOM_SENHA }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Guardar print do erro
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: erro-login
+          path: erro-login.png
+          if-no-files-found: ignore
