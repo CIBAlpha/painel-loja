@@ -1,0 +1,5 @@
+config.env
+node_modules/
+ultimo-log.txt
+erro-login.png
+package-lock.json

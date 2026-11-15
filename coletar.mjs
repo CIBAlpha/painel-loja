@@ -5,6 +5,13 @@
 import { chromium } from 'playwright';
 
 const env = process.env;
+// Limpa espaços e quebras de linha esquecidas no config.env
+for (const k of Object.keys(env)) if (/^(GCOM_|SUPABASE_)/.test(k) && typeof env[k] === 'string') env[k] = env[k].trim();
+
+// Loja fechada: das 2h às 10h (horário de Brasília) o robô não faz nada
+const horaBR = Number(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+if (horaBR >= 2 && horaBR < 10 && !env.FORCAR) { console.log(`São ${horaBR}h: loja fechada, pulando.`); process.exit(0); }
+
 const obrig = ['GCOM_EMPRESA', 'GCOM_USUARIO', 'GCOM_SENHA', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
 for (const k of obrig) if (!env[k]) { console.error(`Falta o segredo ${k}`); process.exit(1); }
 
@@ -19,7 +26,12 @@ const iso = (br) => { const [d, m, a] = br.split('/'); return `${a}-${m}-${d}`; 
 const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
 
 async function loginGcom() {
-  const browser = await chromium.launch();
+  // Usa o Google Chrome já instalado no PC; se não achar, usa o navegador do Playwright
+  let browser;
+  // Abre o Chrome normal, com janela (o Gcom bloqueia o modo escondido)
+  const headless = false;
+  try { browser = await chromium.launch({ channel: 'chrome', headless }); }
+  catch { console.log('Chrome não encontrado, usando o Chromium do Playwright'); browser = await chromium.launch({ headless }); }
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, locale: 'pt-BR' });
   page.on('response', (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.url().slice(0, 120)); });
   page.on('requestfailed', (r) => console.log('Falha de rede:', r.url().slice(0, 120), r.failure()?.errorText));
@@ -111,8 +123,9 @@ async function main() {
     dia, vl_fat: num(diaAtual?.vl_fat), tc: num(diaAtual?.tc), tm: num(diaAtual?.tm),
     origem, atendimento, pagamento, atualizado_em: new Date().toISOString(),
   }];
-  if (ontem) linhasDia.push({ dia: iso(ontem.data), vl_fat: num(ontem.vl_fat), tc: num(ontem.tc), tm: num(ontem.tm), atualizado_em: new Date().toISOString() });
   await supa('vendas_dia', linhasDia, true);
+  // Ontem vai separado (tem menos campos; misturar na mesma gravação dá erro no Supabase)
+  if (ontem) await supa('vendas_dia', [{ dia: iso(ontem.data), vl_fat: num(ontem.vl_fat), tc: num(ontem.tc), tm: num(ontem.tm), atualizado_em: new Date().toISOString() }], true);
 
   await status(true, `FAT R$ ${diaAtual?.vl_fat} | ${diaAtual?.tc} pedidos`);
   console.log('OK', hoje, diaAtual);
