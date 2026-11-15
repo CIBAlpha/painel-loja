@@ -16,8 +16,8 @@ node -v || (echo ERRO: Node.js nao instalou. & pause & exit /b 1)
 
 echo [2/5] Copiando arquivos para %DEST%...
 if not exist "%DEST%" mkdir "%DEST%"
-copy /y "%ORIGEM%..\coletar.mjs" "%DEST%\" >nul
-copy /y "%ORIGEM%..\package.json" "%DEST%\" >nul
+copy /y "%ORIGEM%coletar.mjs" "%DEST%\" >nul
+copy /y "%ORIGEM%package.json" "%DEST%\" >nul
 copy /y "%ORIGEM%rodar-oculto.vbs" "%DEST%\" >nul
 copy /y "%ORIGEM%testar.bat" "%DEST%\" >nul
 if not exist "%DEST%\config.env" copy /y "%ORIGEM%config.env.exemplo" "%DEST%\config.env" >nul
