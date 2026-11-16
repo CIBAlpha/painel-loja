@@ -14,6 +14,10 @@
 <script>
   const SUPABASE_URL = 'https://vncwdtbpiwfnzdjpjnjb.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_-QCXTWF3ytzFjpqmdMaxoQ_cppzjiU9';
+  // ===== META DE FATURAMENTO DO MÊS (em reais) =====
+  // Para mudar a meta, troque o número abaixo. Para um mês específico, use METAS_POR_MES.
+  const META_MENSAL = 200000;
+  const METAS_POR_MES = { /* exemplo: '2026-12': 230000 */ };
 </script>
 <style>
   :root{
@@ -89,6 +93,26 @@
   .fill{height:100%;background:var(--ink);border-radius:5px}
   .bars .b:first-child .fill{background:var(--red)}
 
+  .meta-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .meta-pct{font:700 64px/.9 var(--display);color:var(--red);margin:0}
+  .meta-pct small{font-size:.42em;color:var(--ink);font-weight:600;margin-left:6px}
+  .meta-de{font-size:15px;color:var(--muted);margin:6px 0 0}
+  .meta-de b{color:var(--ink);font-weight:600}
+  .ritmo{font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .ritmo.bom{background:#E3F4EA;color:var(--good)} .ritmo.ruim{background:#FBE5E8;color:var(--red)} .ritmo.neutro{background:#F1EFEC;color:var(--muted)}
+  .meta-bar{position:relative;height:22px;background:#EFECEA;border-radius:11px;margin:30px 0 40px}
+  .meta-bar .feito{position:absolute;inset:0 auto 0 0;background:var(--red);border-radius:11px;max-width:100%}
+  .meta-bar .feito.batida{background:var(--good)}
+  .meta-bar .ideal{position:absolute;top:-8px;bottom:-8px;width:3px;background:var(--gold);border-radius:2px}
+  .meta-bar .ideal span{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);font-size:12px;font-weight:600;color:#9A6A10;white-space:nowrap}
+  .meta-bar .fim{position:absolute;top:calc(100% + 8px);font-size:12px;color:var(--muted)}
+  .meta-stats{display:grid;grid-template-columns:repeat(4,1fr)}
+  .meta-stats div{padding:2px 18px}
+  .meta-stats div:first-child{padding-left:0}
+  .meta-stats div+div{border-left:1px solid var(--line)}
+  .meta-stats p{margin:0;color:var(--muted);font-size:14px}
+  .meta-stats strong{display:block;font:600 28px/1.1 var(--display);margin:4px 0}
+  .meta-stats small{font-size:13px;color:var(--muted)}
   .comp{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
   .comp div{padding:4px 18px}
   .comp div:first-child{padding-left:0}
@@ -132,6 +156,11 @@
     .comp{grid-template-columns:1fr 1fr;row-gap:16px}
     .comp div:nth-child(3){border-left:0;padding-left:0}
     .comp div{padding:4px 12px}
+    .meta-stats{grid-template-columns:1fr 1fr;row-gap:16px}
+    .meta-stats div{padding:2px 12px}
+    .meta-stats div:nth-child(3){border-left:0;padding-left:0}
+    .meta-stats strong{font-size:24px;white-space:nowrap}
+    .meta-pct{font-size:52px}
     .comp strong{font-size:24px;white-space:nowrap}
     .bar{align-items:flex-start}
     .brand{font-size:18px}
@@ -205,7 +234,24 @@
   </header>
 
   <main class="wrap">
-    <section class="panel">
+    <section class="panel" id="metaPanel">
+      <div class="meta-top">
+        <div>
+          <h2>Meta do mês</h2>
+          <p class="meta-pct num" id="metaPct">—</p>
+          <p class="meta-de" id="metaDe"></p>
+        </div>
+        <span class="ritmo neutro" id="metaRitmo">—</span>
+      </div>
+      <div class="meta-bar" role="img" id="metaBar" aria-label="Progresso da meta do mês">
+        <div class="feito" id="metaFeito" style="width:0"></div>
+        <div class="ideal" id="metaIdeal"><span>Ritmo ideal hoje</span></div>
+        <span class="fim" style="left:0">Dia 1</span><span class="fim" id="metaFim" style="right:0">—</span>
+      </div>
+      <div class="meta-stats" id="metaStats"></div>
+    </section>
+
+    <section class="panel" style="margin-top:16px">
       <h2>Como o dia está andando</h2>
       <p class="sub">Faturamento acumulado hora a hora, comparado com o mesmo dia da semana passada.</p>
       <div id="chartDia"></div>
@@ -319,6 +365,43 @@ function histChart(el, dias) {
       <text x="4" y="${yv(media) - 6}" font-size="13" text-anchor="start" fill="#9A6A10" font-weight="600">média ${brl0(media)}</text>` : '') + '</svg>';
 }
 
+function renderMeta(mAtual, fatHoje, agora) {
+  const hojeISO = isoSP(agora), [ano, mes, dia] = hojeISO.split('-').map(Number);
+  const meta = METAS_POR_MES[`${ano}-${String(mes).padStart(2, '0')}`] || META_MENSAL;
+  const diasMes = new Date(ano, mes, 0).getDate();
+  const nomeMes = new Date(ano, mes - 1, 15).toLocaleDateString('pt-BR', { month: 'long' });
+  const feito = Number(mAtual?.vl_fat || 0);
+  const ateOntem = Math.max(0, feito - Number(fatHoje || 0));
+  const p = feito / meta * 100;
+  const falta = Math.max(0, meta - feito);
+  const diasRestantes = diasMes - dia + 1;                       // contando hoje
+  const porDia = Math.max(0, meta - ateOntem) / diasRestantes;   // o que precisa vender por dia, de hoje até o fim
+  const mediaAteAgora = dia > 1 ? ateOntem / (dia - 1) : null;   // média dos dias já fechados
+  const projecao = mediaAteAgora != null ? mediaAteAgora * diasMes : null;
+  const idealOntem = meta * (dia - 1) / diasMes;
+  const dif = ateOntem - idealOntem;
+
+  $('metaPct').innerHTML = `${p.toFixed(1).replace('.', ',')}%<small>da meta</small>`;
+  $('metaDe').innerHTML = `<b>${brl0(feito)}</b> de ${brl0(meta)} em ${nomeMes}`;
+  $('metaFeito').style.width = Math.min(100, p) + '%';
+  $('metaFeito').classList.toggle('batida', p >= 100);
+  $('metaIdeal').style.left = `calc(${dia / diasMes * 100}% - 1.5px)`;
+  $('metaFim').textContent = 'Dia ' + diasMes;
+  $('metaBar').setAttribute('aria-label', `${p.toFixed(0)}% da meta; o ritmo ideal para hoje é ${(dia / diasMes * 100).toFixed(0)}%`);
+
+  const r = $('metaRitmo');
+  if (p >= 100) { r.className = 'ritmo bom'; r.textContent = 'Meta batida!'; }
+  else if (dia === 1) { r.className = 'ritmo neutro'; r.textContent = 'Primeiro dia do mês'; }
+  else if (dif >= 0) { r.className = 'ritmo bom'; r.textContent = `▲ ${brl0(dif)} à frente do ritmo`; }
+  else { r.className = 'ritmo ruim'; r.textContent = `▼ ${brl0(-dif)} atrás do ritmo`; }
+
+  $('metaStats').innerHTML =
+    `<div><p>Falta</p><strong class="num">${brl0(falta)}</strong><small>${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}, contando hoje</small></div>` +
+    `<div><p>Precisa por dia</p><strong class="num">${brl0(porDia)}</strong><small>de hoje até o dia ${diasMes}</small></div>` +
+    `<div><p>Média até ontem</p><strong class="num">${mediaAteAgora != null ? brl0(mediaAteAgora) : '—'}</strong><small>${dia > 1 ? `${dia - 1} ${dia - 1 === 1 ? 'dia fechado' : 'dias fechados'}` : 'ainda sem dias fechados'}</small></div>` +
+    `<div><p>Previsão do mês</p><strong class="num">${projecao != null ? brl0(projecao) : '—'}</strong><small>${projecao == null ? 'aparece a partir do dia 2' : projecao >= meta ? `<span class="up">bate a meta</span> nesse ritmo` : `<span class="down">${brl0(meta - projecao)} abaixo</span> nesse ritmo`}</small></div>`;
+}
+
 const pontos = (snaps) => snaps.map(s => {
   const d = new Date(s.coletado_em);
   const [hh, mm] = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).split(':').map(Number);
@@ -393,6 +476,8 @@ async function carregar() {
   $('dTm').textContent = pT == null ? '' : `${pT >= 0 ? '▲' : '▼'} ${fmtPct(pT)} vs. semana passada`;
 
   const bloco = (t, a, b, bLabel) => `<div><p>${t}</p><strong class="num">${brl0(a?.vl_fat)}</strong><small>${b ? deltaTxt(pct(a?.vl_fat, b?.vl_fat), bLabel) : '&nbsp;'}</small></div>`;
+  renderMeta(mAtual, isHoje ? dAtual?.vl_fat : 0, agora);
+
   $('comp').innerHTML =
     bloco('Ontem' + (dOnt?.data ? ' (' + esc(dOnt.data.slice(0, 5)) + ')' : ''), dOnt, dOntSem, 'vs. semana passada') +
     bloco('Mês até hoje', mAtual, mAnoPass, 'vs. ano passado') +
