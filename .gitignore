@@ -3,3 +3,6 @@ node_modules/
 ultimo-log.txt
 erro-login.png
 package-lock.json
+vendor/
+pedidos-ifood-log.txt*
+pedidos-ifood-erro.txt
