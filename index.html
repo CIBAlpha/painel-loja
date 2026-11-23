@@ -118,6 +118,23 @@
   .meta-stats p{margin:0;color:var(--muted);font-size:14px}
   .meta-stats strong{display:block;font:600 28px/1.1 var(--display);margin:4px 0}
   .meta-stats small{font-size:13px;color:var(--muted)}
+  .abas{display:flex;gap:6px;margin:0 0 16px;border-bottom:2px solid var(--line)}
+  .aba{background:none;border:0;padding:10px 14px 12px;font:600 18px var(--display);color:var(--muted);cursor:pointer;position:relative;margin-bottom:-2px;border-bottom:3px solid transparent}
+  .aba[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
+  .aba .alerta{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:6px;vertical-align:2px}
+  .anun-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .anun-selo{display:inline-flex;align-items:center;gap:10px;font:700 40px/1 var(--display);padding:10px 18px 10px 14px;border-radius:12px}
+  .anun-selo i{width:16px;height:16px;border-radius:50%;flex:none}
+  .anun-selo.ativo{background:#E3F4EA;color:var(--good)} .anun-selo.ativo i{background:var(--good)}
+  .anun-selo.pausado{background:#FDF2DC;color:#9A6A10} .anun-selo.pausado i{background:var(--gold)}
+  .anun-selo.problema{background:#FBE5E8;color:var(--red)} .anun-selo.problema i{background:var(--red)}
+  .anun-selo.neutro{background:#F1EFEC;color:var(--muted)} .anun-selo.neutro i{background:#A8A2A0}
+  .anun-info{margin:18px 0 0;display:grid;gap:6px;font-size:15px}
+  .anun-info b{font-weight:600}
+  .anun-acao{margin-top:18px;padding:14px 16px;background:var(--paper);border-radius:10px;font-size:15px}
+  .anun-aviso{margin-top:14px;padding:12px 14px;border-left:4px solid var(--gold);background:#FFF8EA;font-size:14px;border-radius:6px}
+  .btn-sec{display:inline-block;margin-top:18px;padding:11px 16px;border-radius:10px;background:var(--ink);color:#fff;text-decoration:none;font:600 16px var(--display);letter-spacing:.02em}
+  .btn-sec:hover{background:var(--red)}
   .comp{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
   .comp div{padding:4px 18px}
   .comp div:first-child{padding-left:0}
@@ -239,6 +256,11 @@
   </header>
 
   <main class="wrap">
+    <div class="abas" role="tablist">
+      <button class="aba" role="tab" aria-selected="true" data-aba="abaVendas">Vendas</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="abaAnuncio">Anúncio iFood<span class="alerta hidden" id="anunAlerta"></span></button>
+    </div>
+    <div id="abaVendas">
     <section class="panel" id="metaPanel">
       <div class="meta-top">
         <div>
@@ -280,6 +302,20 @@
       <p class="sub">Faturamento por dia. Fins de semana em preto, hoje em vermelho.</p>
       <div id="chartHist"></div>
     </section>
+
+    </div>
+
+    <div id="abaAnuncio" class="hidden">
+      <section class="panel">
+        <h2>Anúncio no iFood</h2>
+        <p class="sub">O robô confere a página de anúncios do Portal do Parceiro a cada 30 minutos.</p>
+        <div class="anun-top"><span class="anun-selo neutro" id="anunSelo"><i></i><span>—</span></span></div>
+        <div class="anun-info" id="anunInfo"></div>
+        <div class="anun-acao" id="anunAcao"></div>
+        <div class="anun-aviso hidden" id="anunAviso"></div>
+        <a class="btn-sec" href="https://portal.ifood.com.br/ads" target="_blank" rel="noopener">Abrir anúncios no iFood</a>
+      </section>
+    </div>
 
     <footer>
       <span>Atualiza sozinho a cada 2 minutos.</span>
@@ -407,6 +443,46 @@ function renderMeta(mAtual, fatHoje, agora) {
     `<div><p>Previsão do mês</p><strong class="num">${projecao != null ? brl0(projecao) : '—'}</strong><small>${projecao == null ? 'aparece a partir do dia 2' : projecao >= meta ? `<span class="up">bate a meta</span> nesse ritmo` : `<span class="down">${brl0(meta - projecao)} abaixo</span> nesse ritmo`}</small></div>`;
 }
 
+function renderAnuncio(reg, agora) {
+  const selo = $('anunSelo'), alerta = $('anunAlerta'), aviso = $('anunAviso');
+  if (!reg) {
+    selo.className = 'anun-selo neutro'; selo.querySelector('span').textContent = 'Aguardando';
+    $('anunInfo').innerHTML = '<span>O robô ainda não fez a primeira conferência.</span>';
+    $('anunAcao').textContent = 'Deixe o Chrome do PC da loja aberto no Gestor de Pedidos. A primeira conferência acontece em até 30 minutos.';
+    aviso.classList.add('hidden'); alerta.classList.add('hidden'); return;
+  }
+  let d = {}; try { d = JSON.parse(reg.mensagem || '{}'); } catch {}
+  const tipos = {
+    ativo:       ['ativo', 'Ativo', 'Tudo certo: o anúncio está rodando.'],
+    pausado:     ['pausado', 'Pausado', 'O anúncio está parado. Para voltar a anunciar, reative no Portal do Parceiro, em Anúncios.'],
+    problema:    ['problema', 'Com problema', 'O anúncio não está rodando. Abra o Portal do Parceiro, em Anúncios, para ver o motivo e resolver.'],
+    sem_anuncio: ['neutro', 'Sem anúncio', 'Não há anúncio criado para a loja.'],
+    sem_acesso:  ['neutro', 'Sem acesso', 'O iFood pediu login de novo. Entre no Portal do Parceiro pelo Chrome do PC da loja.'],
+    outro:       ['neutro', 'Verificar', 'O robô não reconheceu a situação. Confira direto no Portal do Parceiro.'],
+  };
+  const [cls, rotulo, acao] = tipos[d.status] || tipos.outro;
+  selo.className = 'anun-selo ' + cls; selo.querySelector('span').textContent = rotulo;
+  const quando = new Date(reg.ultima_execucao);
+  const quandoTxt = quando.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }) + ' às ' + hhmm(quando);
+  $('anunInfo').innerHTML =
+    (d.loja ? `<span>Loja: <b>${esc(d.loja)}</b></span>` : '') +
+    (d.texto ? `<span>Como aparece no iFood: <b>${esc(d.texto)}</b></span>` : '') +
+    (d.motivo ? `<span>Motivo informado: <b>${esc(d.motivo)}</b></span>` : '') +
+    `<span>Conferido em ${quandoTxt}</span>`;
+  $('anunAcao').textContent = acao;
+  const min = (agora - quando) / 6e4;
+  aviso.classList.toggle('hidden', min <= 75);
+  if (min > 75) aviso.textContent = `A última conferência foi há ${min > 120 ? Math.round(min / 60) + ' horas' : Math.round(min) + ' minutos'}. Confira se o Chrome do PC da loja está aberto no Gestor de Pedidos.`;
+  alerta.classList.toggle('hidden', d.status === 'ativo');
+  alerta.style.background = d.status === 'pausado' ? 'var(--gold)' : 'var(--red)';
+}
+
+document.querySelectorAll('.aba').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.aba').forEach((x) => { x.setAttribute('aria-selected', x === b); $(x.dataset.aba).classList.toggle('hidden', x !== b); });
+  try { localStorage.setItem('abaPainel', b.dataset.aba); } catch {}
+}));
+try { const a = localStorage.getItem('abaPainel'); if (a && a !== 'abaVendas') document.querySelector(`.aba[data-aba="${a}"]`)?.click(); } catch {}
+
 const pontos = (snaps) => snaps.map(s => {
   const d = new Date(s.coletado_em);
   const [hh, mm] = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).split(':').map(Number);
@@ -432,21 +508,23 @@ function dadosDemo(agora) {
     } },
     snHoje: snaps(9200, hAgora, agora), snSem: snaps(8650, 24, new Date(agora - 7 * 864e5)), hist,
     st: { ok: true, ultima_execucao: new Date(agora - 4 * 6e4).toISOString() },
+    anun: { ultima_execucao: new Date(agora - 12 * 6e4).toISOString(), ok: true, mensagem: JSON.stringify({ status: 'ativo', texto: 'Ativo', loja: 'China in Box - Alphaville' }) },
   };
 }
 
 async function buscar(agora) {
   if (DEMO) return dadosDemo(agora);
   const hoje = isoSP(agora), semana = isoSP(new Date(agora - 7 * 864e5)), inicioHist = isoSP(new Date(agora - 13 * 864e5));
-  const [ult, snHoje, snSem, hist, st] = await Promise.all([
+  const [ult, snHoje, snSem, hist, st, anun] = await Promise.all([
     sb.from('vendas_snapshot').select('*').order('coletado_em', { ascending: false }).limit(1).maybeSingle(),
     sb.from('vendas_snapshot').select('coletado_em,vl_fat').eq('dia', hoje).order('coletado_em'),
     sb.from('vendas_snapshot').select('coletado_em,vl_fat').eq('dia', semana).order('coletado_em'),
     sb.from('vendas_dia').select('dia,vl_fat,tc,tm').gte('dia', inicioHist).order('dia'),
     sb.from('robo_status').select('*').eq('id', 1).maybeSingle(),
+    sb.from('robo_status').select('*').eq('id', 2).maybeSingle(),
   ]);
   if (ult.error) throw ult.error;
-  return { ult: ult.data, snHoje: snHoje.data || [], snSem: snSem.data || [], hist: hist.data || [], st: st.data };
+  return { ult: ult.data, snHoje: snHoje.data || [], snSem: snSem.data || [], hist: hist.data || [], st: st.data, anun: anun.data };
 }
 
 async function carregar() {
@@ -454,7 +532,8 @@ async function carregar() {
   const dataTxt = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo' });
   $('hoje').innerHTML = dataTxt.charAt(0).toUpperCase() + dataTxt.slice(1) + (DEMO ? '<span class="demo-tag">Dados de exemplo</span>' : '');
 
-  const { ult: u, snHoje, snSem, hist, st } = await buscar(agora);
+  const { ult: u, snHoje, snSem, hist, st, anun } = await buscar(agora);
+  renderAnuncio(anun, agora);
 
   const minutos = u ? (agora - new Date(u.coletado_em)) / 6e4 : Infinity;
   if (st && st.ok === false) setStatus('bad', 'Robô com erro às ' + hhmm(st.ultima_execucao), st.mensagem || '');
