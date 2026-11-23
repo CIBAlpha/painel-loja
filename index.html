@@ -521,7 +521,7 @@ async function buscar(agora) {
     sb.from('vendas_snapshot').select('coletado_em,vl_fat').eq('dia', semana).order('coletado_em'),
     sb.from('vendas_dia').select('dia,vl_fat,tc,tm').gte('dia', inicioHist).order('dia'),
     sb.from('robo_status').select('*').eq('id', 1).maybeSingle(),
-    sb.from('robo_status').select('*').eq('id', 2).maybeSingle(),
+    sb.from('robo_status').select('*').eq('id', 3).maybeSingle(),
   ]);
   if (ult.error) throw ult.error;
   return { ult: ult.data, snHoje: snHoje.data || [], snSem: snSem.data || [], hist: hist.data || [], st: st.data, anun: anun.data };
