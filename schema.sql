@@ -53,3 +53,8 @@ create or replace function public.limpar_snapshots_antigos() returns void
 language sql as $$
   delete from public.vendas_snapshot where coletado_em < now() - interval '60 days';
 $$;
+
+-- Produtos vendidos (gravado pelo robô: ref = 'dia:AAAA-MM-DD' ou 'mes:AAAA-MM')
+alter table public.vendas_produtos enable row level security;
+drop policy if exists "leitura logado" on public.vendas_produtos;
+create policy "leitura logado" on public.vendas_produtos for select to authenticated using (true);
