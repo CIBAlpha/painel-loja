@@ -135,6 +135,23 @@
   .anun-aviso{margin-top:14px;padding:12px 14px;border-left:4px solid var(--gold);background:#FFF8EA;font-size:14px;border-radius:6px}
   .btn-sec{display:inline-block;margin-top:18px;padding:11px 16px;border-radius:10px;background:var(--ink);color:#fff;text-decoration:none;font:600 16px var(--display);letter-spacing:.02em}
   .btn-sec:hover{background:var(--red)}
+  .prod-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--paper);border-radius:10px;padding:3px}
+  .seg button{border:0;background:none;padding:7px 14px;border-radius:8px;font:600 14px var(--body);color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(35,31,32,.15)}
+  .prod-busca{width:100%;max-width:320px;margin:4px 0 12px;padding:10px 12px}
+  .prod-tab{width:100%;border-collapse:collapse;font-size:15px}
+  .prod-tab th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .prod-tab th button{background:none;border:0;font:inherit;color:inherit;cursor:pointer;padding:0}
+  .prod-tab th button[aria-sort]{color:var(--ink)}
+  .prod-tab td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .prod-tab .n{text-align:right;white-space:nowrap}
+  .prod-tab .pos{color:var(--muted);width:28px;font-size:13px}
+  .prod-tab .nome{font-weight:500}
+  .prod-tab .mini{height:5px;background:#EFECEA;border-radius:3px;margin-top:5px;max-width:260px}
+  .prod-tab .mini div{height:100%;background:var(--red);border-radius:3px;opacity:.85}
+  .prod-tab tfoot td{font-weight:600;border-bottom:0}
+  .prod-mais{margin-top:12px}
   .comp{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
   .comp div{padding:4px 18px}
   .comp div:first-child{padding-left:0}
@@ -178,6 +195,9 @@
     .comp{grid-template-columns:1fr 1fr;row-gap:16px}
     .comp div:nth-child(3){border-left:0;padding-left:0}
     .comp div{padding:4px 12px}
+    .prod-tab{font-size:14px}
+    .prod-tab .pos{display:none}
+    .prod-busca{max-width:none}
     .meta-stats{grid-template-columns:1fr 1fr;row-gap:16px}
     .meta-stats div{padding:2px 12px}
     .meta-stats div:nth-child(3){border-left:0;padding-left:0}
@@ -303,6 +323,17 @@
       <div id="chartHist"></div>
     </section>
 
+      <section class="panel" style="margin-top:16px" id="prodPanel">
+        <div class="prod-top">
+          <div><h2>Produtos vendidos</h2><p class="sub" id="prodSub">Quantidade e valor de cada produto, até a última atualização.</p></div>
+          <div class="seg" role="group" aria-label="Período">
+            <button type="button" aria-pressed="true" data-per="dia">Hoje</button>
+            <button type="button" aria-pressed="false" data-per="mes">Mês</button>
+          </div>
+        </div>
+        <input class="prod-busca" id="prodBusca" type="search" placeholder="Buscar produto (ex.: bowl)" aria-label="Buscar produto">
+        <div id="prodLista"></div>
+      </section>
     </div>
 
     <div id="abaAnuncio" class="hidden">
@@ -483,6 +514,46 @@ document.querySelectorAll('.aba').forEach((b) => b.addEventListener('click', () 
 }));
 try { const a = localStorage.getItem('abaPainel'); if (a && a !== 'abaVendas') document.querySelector(`.aba[data-aba="${a}"]`)?.click(); } catch {}
 
+// ---------- Produtos vendidos ----------
+const prod = { dados: { dia: null, mes: null }, per: 'dia', ordem: 'qtd', todos: false, busca: '' };
+const normal = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function renderProdutos() {
+  const reg = prod.dados[prod.per];
+  const el = $('prodLista');
+  const itens = (reg?.itens || []).filter((i) => (i.qtd || 0) > 0 || (i.valor || 0) > 0);
+  $('prodSub').textContent = reg?.atualizado_em
+    ? `${prod.per === 'dia' ? 'Hoje' : 'No mês'}, até a atualização das ${hhmm(reg.atualizado_em)}.`
+    : 'Quantidade e valor de cada produto, até a última atualização.';
+  if (!itens.length) { el.innerHTML = `<p class="empty">${prod.per === 'dia' ? 'Ainda sem produtos vendidos hoje.' : 'Ainda sem produtos no mês.'}</p>`; return; }
+  const totQ = itens.reduce((s, i) => s + (i.qtd || 0), 0), totV = itens.reduce((s, i) => s + (i.valor || 0), 0);
+  let lista = [...itens].sort((a, b) => (b[prod.ordem] || 0) - (a[prod.ordem] || 0));
+  const rank = new Map(lista.map((i, k) => [i, k + 1]));
+  if (prod.busca) lista = lista.filter((i) => normal(i.nome).includes(normal(prod.busca)));
+  const LIM = 15, mostra = prod.todos || prod.busca ? lista : lista.slice(0, LIM);
+  const maxV = Math.max(...itens.map((i) => i[prod.ordem] || 0)) || 1;
+  const th = (campo, rot) => `<th class="n"><button type="button" data-ord="${campo}" ${prod.ordem === campo ? 'aria-sort="descending"' : ''}>${rot}${prod.ordem === campo ? ' ▼' : ''}</button></th>`;
+  const fQ = (v) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+  el.innerHTML = !lista.length ? `<p class="empty">Nenhum produto com “${esc(prod.busca)}”.</p>` : `
+    <table class="prod-tab">
+      <thead><tr><th class="pos">#</th><th>Produto</th>${th('qtd', 'Qtd.')}${th('valor', 'Valor')}</tr></thead>
+      <tbody>${mostra.map((i) => `<tr>
+        <td class="pos num">${rank.get(i)}</td>
+        <td><div class="nome">${esc(i.nome)}</div><div class="mini"><div style="width:${(i[prod.ordem] || 0) / maxV * 100}%"></div></div></td>
+        <td class="n num">${fQ(i.qtd)}</td><td class="n num">${brl(i.valor)}</td></tr>`).join('')}</tbody>
+      ${prod.busca ? '' : `<tfoot><tr><td class="pos"></td><td>Total (${itens.length} produtos)</td><td class="n num">${fQ(totQ)}</td><td class="n num">${brl(totV)}</td></tr></tfoot>`}
+    </table>
+    ${!prod.busca && lista.length > LIM ? `<button class="link prod-mais" type="button" id="prodMais">${prod.todos ? 'Mostrar só os 15 primeiros' : `Ver todos os ${lista.length} produtos`}</button>` : ''}`;
+  el.querySelectorAll('[data-ord]').forEach((b) => b.onclick = () => { prod.ordem = b.dataset.ord; renderProdutos(); });
+  const mais = $('prodMais'); if (mais) mais.onclick = () => { prod.todos = !prod.todos; renderProdutos(); };
+}
+document.querySelectorAll('[data-per]').forEach((b) => b.addEventListener('click', () => {
+  prod.per = b.dataset.per; prod.todos = false;
+  document.querySelectorAll('[data-per]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  renderProdutos();
+}));
+$('prodBusca').addEventListener('input', (e) => { prod.busca = e.target.value.trim(); renderProdutos(); });
+
 const pontos = (snaps) => snaps.map(s => {
   const d = new Date(s.coletado_em);
   const [hh, mm] = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).split(':').map(Number);
@@ -508,6 +579,12 @@ function dadosDemo(agora) {
     } },
     snHoje: snaps(9200, hAgora, agora), snSem: snaps(8650, 24, new Date(agora - 7 * 864e5)), hist,
     st: { ok: true, ultima_execucao: new Date(agora - 4 * 6e4).toISOString() },
+    prods: (() => {
+      const base = [['Bowl Carne com Batata', 60, 1000], ['Yakisoba Tradicional', 41, 1394], ['Frango Xadrez', 33, 1056], ['Rolinho Primavera (2 un.)', 52, 520], ['Bowl Frango Teriyaki', 28, 504], ['Carne com Brócolis', 19, 703], ['Arroz Chop Suey', 24, 432], ['Guioza (6 un.)', 18, 378], ['Refrigerante Lata', 47, 329], ['Frango Agridoce', 12, 408], ['Biscoito da Sorte', 64, 0], ['Bowl Vegetariano', 9, 153], ['Camarão Empanado', 6, 330], ['Suco Natural', 11, 132], ['Sorvete Frito', 7, 140], ['Lombo Agridoce', 8, 296], ['Água Mineral', 14, 70]];
+      const it = (f) => base.map(([nome, q, v], k) => ({ cd: String(1000 + k), nome, qtd: Math.round(q * f), valor: Math.round(v * f * 100) / 100 }));
+      const at = new Date(agora - 4 * 6e4).toISOString();
+      return { dia: { itens: it(1), atualizado_em: at }, mes: { itens: it(19.4), atualizado_em: at } };
+    })(),
     anun: { ultima_execucao: new Date(agora - 12 * 6e4).toISOString(), ok: true, mensagem: JSON.stringify({ status: 'ativo', texto: 'Ativo', loja: 'China in Box - Alphaville' }) },
   };
 }
@@ -515,16 +592,18 @@ function dadosDemo(agora) {
 async function buscar(agora) {
   if (DEMO) return dadosDemo(agora);
   const hoje = isoSP(agora), semana = isoSP(new Date(agora - 7 * 864e5)), inicioHist = isoSP(new Date(agora - 13 * 864e5));
-  const [ult, snHoje, snSem, hist, st, anun] = await Promise.all([
+  const [ult, snHoje, snSem, hist, st, anun, prods] = await Promise.all([
     sb.from('vendas_snapshot').select('*').order('coletado_em', { ascending: false }).limit(1).maybeSingle(),
     sb.from('vendas_snapshot').select('coletado_em,vl_fat').eq('dia', hoje).order('coletado_em'),
     sb.from('vendas_snapshot').select('coletado_em,vl_fat').eq('dia', semana).order('coletado_em'),
     sb.from('vendas_dia').select('dia,vl_fat,tc,tm').gte('dia', inicioHist).order('dia'),
     sb.from('robo_status').select('*').eq('id', 1).maybeSingle(),
     sb.from('robo_status').select('*').eq('id', 3).maybeSingle(),
+    sb.from('vendas_produtos').select('ref,itens,atualizado_em').in('ref', ['dia:' + hoje, 'mes:' + hoje.slice(0, 7)]),
   ]);
   if (ult.error) throw ult.error;
-  return { ult: ult.data, snHoje: snHoje.data || [], snSem: snSem.data || [], hist: hist.data || [], st: st.data, anun: anun.data };
+  return { ult: ult.data, snHoje: snHoje.data || [], snSem: snSem.data || [], hist: hist.data || [], st: st.data, anun: anun.data,
+    prods: { dia: (prods.data || []).find((r) => r.ref.startsWith('dia:')) || null, mes: (prods.data || []).find((r) => r.ref.startsWith('mes:')) || null } };
 }
 
 async function carregar() {
@@ -532,8 +611,9 @@ async function carregar() {
   const dataTxt = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo' });
   $('hoje').innerHTML = dataTxt.charAt(0).toUpperCase() + dataTxt.slice(1) + (DEMO ? '<span class="demo-tag">Dados de exemplo</span>' : '');
 
-  const { ult: u, snHoje, snSem, hist, st, anun } = await buscar(agora);
+  const { ult: u, snHoje, snSem, hist, st, anun, prods } = await buscar(agora);
   renderAnuncio(anun, agora);
+  prod.dados = prods || { dia: null, mes: null }; renderProdutos();
 
   const minutos = u ? (agora - new Date(u.coletado_em)) / 6e4 : Infinity;
   if (st && st.ok === false) setStatus('bad', 'Robô com erro às ' + hhmm(st.ultima_execucao), st.mensagem || '');
