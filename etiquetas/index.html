@@ -286,37 +286,13 @@ table.log td.hs .hr{margin:0 4px 4px 0}
   <div class="gbox"><div class="gcard"><h2 id="msgTitle">Aguarde</h2><p class="hint" id="msgText"></p><button class="btn" id="msgBtn" hidden>Sair desta conta</button></div></div>
 </section>
 
-<!-- ============ PRIMEIRO ACESSO: CADASTRAR GERENTE ============ -->
-<section class="gate" id="scrSetup" hidden>
-  <div class="gbox">
-    <div class="gbrand"><div class="logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></div><div><h1>Bem-vindo!</h1><p id="setupLoja"></p></div></div>
-    <form class="gcard" id="fSetup">
-      <h2>Cadastre o gerente</h2>
-      <p class="hint">É a primeira vez que a loja usa o app. Cadastre quem vai cuidar dele. Depois, na área do gerente, você cadastra os funcionários.</p>
-      <div class="field"><label for="setNome">Nome</label><input id="setNome" required maxlength="30"></div>
-      <div class="field"><label for="setPin">PIN de 4 números</label><input id="setPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off"></div>
-      <div class="err" id="setupErr" role="alert"></div>
-      <button class="btn red" type="submit">Cadastrar e entrar</button>
-    </form>
-  </div>
-</section>
 
-<!-- ============ QUEM ESTÁ USANDO ============ -->
-<section class="gate" id="scrWho" hidden>
-  <div class="gbox wide who">
-    <div class="gbrand"><div class="logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#fff"/></svg></div><div><h1>Etiqueta Fácil</h1><p id="whoLoja"></p></div></div>
-    <h2>Quem está usando?</h2>
-    <p>Toque no seu nome e digite o seu PIN.</p>
-    <div class="people" id="people"></div>
-    <div class="gfoot"><span id="whoInfo"></span><button class="linkbtn" id="whoLogout">Sair da conta da loja</button></div>
-  </div>
-</section>
 
 <dialog id="pinDlg" style="max-width:360px">
   <div class="dbody pinbox">
-    <div class="avatar" id="pinAv"></div>
-    <h2 id="pinNome" style="font-family:var(--f-display);font-weight:400;margin:0"></h2>
-    <p class="hint" style="margin:4px 0 0">Digite o seu PIN</p>
+    <div class="avatar" id="pinAv"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <h2 id="pinNome" style="font-family:var(--f-display);font-weight:400;margin:0">Área do gerente</h2>
+    <p class="hint" style="margin:4px 0 0" id="pinMsg">Digite o PIN do gerente</p>
     <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
     <div class="err" id="pinErr" role="alert" style="margin-top:0"></div>
     <div class="pad" id="pad"></div>
@@ -333,16 +309,15 @@ table.log td.hs .hr{margin:0 4px 4px 0}
     </div>
     <span class="net" id="netWarn" hidden>Sem internet: as impressões serão registradas quando voltar</span>
     <button class="chipbtn" id="openLog" aria-label="Ver etiquetas impressas hoje"><b id="countToday" class="num">0</b><span>etiquetas<br>impressas hoje</span></button>
-    <button class="chipbtn" id="switchUser" aria-label="Trocar de funcionário"><span class="av" id="meAv"></span><span><span class="nm" id="meNome"></span>trocar</span></button>
     <div class="clock"><b id="clockTime" class="num">--:--</b><span id="clockDate"></span></div>
-    <button class="gear" id="openMgr" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Gerente</button>
+    <button class="gear" id="openMgr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Gerente</button>
   </div>
 </header>
 
 <div class="wrap">
   <section class="hero" aria-labelledby="heroTitle">
     <div style="position:relative;z-index:1">
-      <p class="eyebrow" id="greet">Bom dia</p>
+      <p class="eyebrow" id="greet">Bom dia, equipe</p>
       <h2 id="heroTitle">Lista da manhã</h2>
       <div class="stats"><span><b id="dProd" class="num">0</b> produtos</span><span><b id="dEtq" class="num">0</b> etiquetas</span><span>com a data de hoje</span></div>
     </div>
@@ -407,9 +382,8 @@ table.log td.hs .hr{margin:0 4px 4px 0}
     <div class="kpis">
       <div class="kpi"><b id="kEtq" class="num">0</b><span>etiquetas</span></div>
       <div class="kpi"><b id="kProd" class="num">0</b><span>produtos diferentes</span></div>
-      <div class="kpi"><b id="kFunc" class="num">0</b><span>funcionários</span></div>
     </div>
-    <div class="tabs" id="logTabs"><button class="tab" data-view="hora" aria-pressed="true">Por horário</button><button class="tab" data-view="prod" aria-pressed="false">Por produto</button><button class="tab" data-view="func" aria-pressed="false">Por funcionário</button></div>
+    <div class="tabs" id="logTabs"><button class="tab" data-view="hora" aria-pressed="true">Por horário</button><button class="tab" data-view="prod" aria-pressed="false">Por produto</button></div>
     <div class="tablewrap" id="logTable"></div>
     <div class="dfoot">
       <p class="hint">Conta quando alguém manda imprimir. Vale para todos os computadores da loja e fica guardado na nuvem.</p>
@@ -422,24 +396,10 @@ table.log td.hs .hr{margin:0 4px 4px 0}
 <dialog id="mgrDlg" class="big" aria-labelledby="mgrTitle">
   <div class="dhead">
     <div class="t"><div><h2 id="mgrTitle">Área do gerente</h2><p id="mgrSub"></p></div><button class="xbtn" data-close aria-label="Fechar">×</button></div>
-    <div class="pills" id="mgrTabs"><button class="pill" data-mt="func" aria-pressed="true">Funcionários</button><button class="pill" data-mt="prod" aria-pressed="false">Lista de produtos</button><button class="pill" data-mt="etq" aria-pressed="false">Etiqueta</button><button class="pill" data-mt="conta" aria-pressed="false">Conta</button></div>
+    <div class="pills" id="mgrTabs"><button class="pill" data-mt="prod" aria-pressed="true">Lista de produtos</button><button class="pill" data-mt="etq" aria-pressed="false">Etiqueta</button><button class="pill" data-mt="conta" aria-pressed="false">Conta</button></div>
   </div>
   <div class="dbody">
-    <div data-mp="func">
-      <div class="mgsec">
-        <h3>Cadastrar funcionário</h3>
-        <p class="hint">Cada um escolhe o nome e digita o PIN para usar. Assim o relatório mostra quem imprimiu.</p>
-        <form class="inline" id="fAdd">
-          <div class="field"><label for="addNome">Nome</label><input id="addNome" required maxlength="30"></div>
-          <div class="field" style="flex:0 1 130px"><label for="addPin">PIN (4 números)</label><input id="addPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off"></div>
-          <label class="check"><input type="checkbox" id="addGer"> Gerente</label>
-          <button class="btn red" type="submit" style="margin-bottom:2px">Cadastrar</button>
-        </form>
-        <div class="err" id="addErr" role="alert"></div>
-      </div>
-      <div class="mgsec"><h3>Equipe</h3><ul class="flist" id="flist"></ul></div>
-    </div>
-    <div data-mp="prod" hidden>
+    <div data-mp="prod">
       <div class="mgsec">
         <h3>Lista de produtos atual</h3>
         <p id="prodInfo" class="hint"></p>
@@ -456,6 +416,11 @@ table.log td.hs .hr{margin:0 4px 4px 0}
         <h3>Tamanho da etiqueta</h3>
         <p class="hint">Use o mesmo número do "Comprimento" configurado na Brother. Hoje: 25 mm.</p>
         <form class="inline" id="fAlt"><div class="field" style="flex:0 1 160px"><label for="labelH">Altura (mm)</label><input id="labelH" type="number" min="15" max="80"></div><button class="btn dark" type="submit">Salvar</button></form>
+      </div>
+      <div class="mgsec">
+        <h3>PIN do gerente</h3>
+        <p class="hint">É o número de 4 dígitos que abre esta área.</p>
+        <button class="btn" id="btnNovoPin">Trocar o PIN do gerente</button>
       </div>
     </div>
     <div data-mp="conta" hidden>
@@ -478,11 +443,10 @@ table.log td.hs .hr{margin:0 4px 4px 0}
 const SUPABASE_URL = 'https://vncwdtbpiwfnzdjpjnjb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_-QCXTWF3ytzFjpqmdMaxoQ_cppzjiU9';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'etiquetas-auth', persistSession: true, autoRefreshToken: true } });
-const IDLE_MIN = 10;   // minutos parado até voltar para "Quem está usando?"
 
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
-const show = id => { ['scrLogin','scrMsg','scrSetup','scrWho','scrApp'].forEach(s => $('#'+s).hidden = s !== id); };
+const show = id => { ['scrLogin','scrMsg','scrApp'].forEach(s => $('#'+s).hidden = s !== id); };
 const norm = s => (s||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const esc = s => (s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad2 = n => String(n).padStart(2,'0');
@@ -505,7 +469,7 @@ const svg = (p,s=20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fil
 document.querySelectorAll('dialog [data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 
 /* ================= Estado ================= */
-const S = { user:null, loja:null, lojaNome:'', papel:'', funcs:[], func:null, products:[], baseNome:'', baseInfo:null,
+const S = { user:null, loja:null, lojaNome:'', papel:'', pinGer:null, products:[], baseNome:'', baseInfo:null,
             manha:[], altura:25, sel:null, type:'d', qty:1, idx:0, results:[], cat:'', total:0, queue:[], hoje:0 };
 
 /* ================= Validades ================= */
@@ -574,7 +538,7 @@ function iconFor(c){
   return I.todas;
 }
 
-/* ================= Entrada: login, gerente, quem está usando ================= */
+/* ================= Entrada ================= */
 async function boot(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ show('scrLogin'); setTimeout(()=>$('#email').focus(),50); return; }
@@ -599,79 +563,52 @@ async function carregar(){
   if(m.error) throw m.error;
   if(!m.data.length){ mensagem('Esta conta ainda não tem acesso','O login funcionou, mas esta conta não está ligada a nenhuma loja. Peça ao responsável para liberar o acesso no Supabase.', true); return; }
   S.loja = m.data[0].loja_id; S.papel = m.data[0].papel;
-  const [lj, cf, pr, fu] = await Promise.all([
+  const [lj, cf, pr] = await Promise.all([
     sb.from('etq_lojas').select('nome').eq('id',S.loja).maybeSingle(),
-    sb.from('etq_config').select('manha,altura_mm').eq('loja_id',S.loja).maybeSingle(),
-    sb.from('etq_produtos').select('nome_revisao,produtos,atualizado_em,atualizado_por').eq('loja_id',S.loja).maybeSingle(),
-    sb.from('etq_funcionarios').select('id,nome,pin,gerente,ativo').eq('loja_id',S.loja).order('nome')
+    sb.from('etq_config').select('manha,altura_mm,pin_gerente').eq('loja_id',S.loja).maybeSingle(),
+    sb.from('etq_produtos').select('nome_revisao,produtos,atualizado_em,atualizado_por').eq('loja_id',S.loja).maybeSingle()
   ]);
-  for(const r of [lj,cf,pr,fu]) if(r.error) throw r.error;
+  for(const r of [lj,cf,pr]) if(r.error) throw r.error;
   S.lojaNome = lj.data?.nome || S.loja;
-  S.manha = cf.data?.manha || []; S.altura = cf.data?.altura_mm || 25;
+  S.manha = cf.data?.manha || []; S.altura = cf.data?.altura_mm || 25; S.pinGer = cf.data?.pin_gerente || null;
   if(!cf.data) await sb.from('etq_config').insert({loja_id:S.loja});
   if(pr.data){ S.products = pr.data.produtos||[]; S.baseNome = pr.data.nome_revisao; S.baseInfo = pr.data; }
-  S.funcs = fu.data || [];
-  $('#lojaNome').textContent = $('#whoLoja').textContent = $('#setupLoja').textContent = S.lojaNome;
+  $('#lojaNome').textContent = S.lojaNome;
   flushPend();
-  if(!S.funcs.filter(f=>f.ativo).length){ show('scrSetup'); setTimeout(()=>$('#setNome').focus(),50); return; }
-  const lembrado = store.get('etq-func', null);
-  const f = lembrado && S.funcs.find(x=>x.id===lembrado.id && x.ativo);
-  if(f && Date.now()-lembrado.t < IDLE_MIN*60e3) entrar(f); else quem();
+  show('scrApp'); renderTudo(); atualizarContador(); setTimeout(()=>$('#q').focus(),50);
 }
 
-$('#fSetup').addEventListener('submit', async e=>{
-  e.preventDefault(); const pin=$('#setPin').value.trim(), nome=$('#setNome').value.trim();
-  if(!/^\d{4}$/.test(pin)){ $('#setupErr').textContent='O PIN precisa ter 4 números.'; return; }
-  const { data, error } = await sb.from('etq_funcionarios').insert({loja_id:S.loja, nome, pin:await hashPin(S.loja,pin), gerente:true}).select('id,nome,pin,gerente,ativo').single();
-  if(error){ $('#setupErr').textContent='Não consegui cadastrar. Confira a internet e tente de novo.'; return; }
-  S.funcs=[data]; entrar(data);
-});
-
-function quem(){
-  S.func=null; store.del('etq-func');
-  const ativos=S.funcs.filter(f=>f.ativo);
-  $('#people').innerHTML = ativos.map(f=>`<button class="person" data-f="${esc(f.id)}"><span class="avatar">${esc(ini(f.nome))}</span>${esc(f.nome)}${f.gerente?'<small>gerente</small>':''}</button>`).join('');
-  $('#whoInfo').textContent = `${ativos.length} ${ativos.length==1?'pessoa cadastrada':'pessoas cadastradas'}`;
-  document.querySelectorAll('dialog[open]').forEach(d=>d.close());
-  show('scrWho');
-}
-$('#people').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b)abrirPin(S.funcs.find(f=>f.id===b.dataset.f))});
-$('#whoLogout').onclick=async()=>{await sb.auth.signOut();store.del('etq-func');location.reload()};
-
-let pinFor=null, pinVal='';
-function abrirPin(f){
-  pinFor=f; pinVal=''; $('#pinAv').textContent=ini(f.nome); $('#pinNome').textContent=f.nome; $('#pinErr').textContent='';
+/* PIN do gerente: abre a área do gerente (na primeira vez, cria o PIN) */
+let pinMode='check', pinVal='', pinNovo='', pinTab='prod';
+function abrirPin(mode, tab){
+  pinMode=mode; pinTab=tab||'prod'; pinVal=''; pinNovo=''; $('#pinErr').textContent='';
+  $('#pinMsg').textContent = mode==='check' ? 'Digite o PIN do gerente' : 'Crie um PIN de 4 números para o gerente';
   $('#pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('')+'<button class="fn" data-k="x">Cancelar</button><button data-k="0">0</button><button class="fn" data-k="b">Apagar</button>';
   dots(); $('#pinDlg').showModal();
 }
 function dots(){ document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i<pinVal.length)); }
+function pinErro(msg){ $('#pinErr').textContent=msg; const d=$('#dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); pinVal=''; setTimeout(dots,250); }
 async function pinTecla(k){
-  if(!pinFor) return;
   if(k==='x'){ $('#pinDlg').close(); return; }
   if(k==='b'){ pinVal=pinVal.slice(0,-1); dots(); return; }
   if(!/\d/.test(k) || pinVal.length>=4) return;
   pinVal+=k; dots();
-  if(pinVal.length===4){
-    const ok = (await hashPin(S.loja,pinVal)) === pinFor.pin;
-    if(ok){ $('#pinDlg').close(); entrar(pinFor); }
-    else { $('#pinErr').textContent='PIN errado. Tente de novo.'; const d=$('#dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); pinVal=''; setTimeout(dots,250); }
+  if(pinVal.length<4) return;
+  if(pinMode==='check'){
+    if((await hashPin(S.loja,pinVal))===S.pinGer){ $('#pinDlg').close(); abrirMgr(pinTab); } else pinErro('PIN errado. Tente de novo.');
+  } else if(pinMode==='new1'){
+    pinNovo=pinVal; pinVal=''; pinMode='new2'; $('#pinMsg').textContent='Digite o mesmo PIN de novo para confirmar'; $('#pinErr').textContent=''; setTimeout(dots,150);
+  } else {
+    if(pinVal!==pinNovo){ pinMode='new1'; $('#pinMsg').textContent='Crie um PIN de 4 números para o gerente'; pinErro('Os dois PINs ficaram diferentes. Comece de novo.'); return; }
+    const h=await hashPin(S.loja,pinVal);
+    const {error}=await sb.from('etq_config').update({pin_gerente:h}).eq('loja_id',S.loja);
+    if(error){ pinErro('Não consegui salvar. Confira a internet.'); return; }
+    S.pinGer=h; $('#pinDlg').close(); toast('PIN do gerente salvo'); abrirMgr(pinTab);
   }
 }
 $('#pad').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)pinTecla(b.dataset.k)});
 $('#pinDlg').addEventListener('keydown',e=>{ if(/^\d$/.test(e.key)) pinTecla(e.key); else if(e.key==='Backspace') pinTecla('b'); });
-
-function entrar(f){
-  S.func=f; store.set('etq-func',{id:f.id,t:Date.now()});
-  $('#meAv').textContent=ini(f.nome); $('#meNome').textContent=f.nome.split(' ')[0];
-  $('#openMgr').hidden=!f.gerente;
-  show('scrApp'); renderTudo(); atualizarContador(); setTimeout(()=>$('#q').focus(),50);
-}
-$('#switchUser').onclick=quem;
-
-// Volta para "Quem está usando?" depois de um tempo parado
-let lastAct=Date.now();
-['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now(); if(S.func) store.set('etq-func',{id:S.func.id,t:lastAct});},{passive:true}));
-setInterval(()=>{ if(S.func && !$('#scrApp').hidden && Date.now()-lastAct > IDLE_MIN*60e3) quem(); },30e3);
+function pedirGerente(tab){ abrirPin(S.pinGer?'check':'new1', tab); }
 
 /* ================= Tela principal ================= */
 function renderTudo(){ renderLegend(); renderCats(); renderList(); renderDaily(); renderChips(); renderPreview(false); tick(); }
@@ -688,8 +625,8 @@ const inDaily = p => S.manha.some(d=>d.n===p.n);
 function renderList(){
   const el=$('#list');
   if(!S.products.length){
-    el.innerHTML = `<div class="none"><b>Nenhuma lista de produtos carregada ainda.</b><br>${S.func?.gerente?'Carregue a planilha da revisão do mês na área do gerente.':'Peça ao gerente para carregar a planilha da revisão do mês.'}${S.func?.gerente?'<br><button class="btn red" id="goProd">Carregar planilha</button>':''}</div>`;
-    const g=$('#goProd'); if(g) g.onclick=()=>abrirMgr('prod');
+    el.innerHTML = `<div class="none"><b>Nenhuma lista de produtos carregada ainda.</b><br>O gerente carrega a planilha da revisão do mês na área do gerente.<br><button class="btn red" id="goProd">Carregar planilha</button></div>`;
+    const g=$('#goProd'); if(g) g.onclick=()=>pedirGerente('prod');
     return;
   }
   const q = norm($('#q').value).trim(), words=q.split(/\s+/).filter(Boolean);
@@ -770,7 +707,7 @@ function doPrint(items, origem){
   const n=items.reduce((s,i)=>s+i.qty,0), now=new Date();
   renderPreview(true);
   window.print();
-  const rows = items.map(it=>({loja_id:S.loja, impresso_em:now.toISOString(), funcionario_id:S.func?.id||null, funcionario_nome:S.func?.nome||null,
+  const rows = items.map(it=>({loja_id:S.loja, impresso_em:now.toISOString(),
     produto:it.p.n, validade:compute(it.p,it.type,now).val, tipo:it.type, qtd:it.qty, origem}));
   registrar(rows);
   S.hoje+=n; $('#countToday').textContent=S.hoje;
@@ -798,14 +735,14 @@ async function atualizarContador(){
   const pend=store.get('etq-pend',[]).filter(r=>new Date(r.impresso_em)>=d).reduce((s,r)=>s+r.qtd,0);
   S.hoje=data.reduce((s,r)=>s+r.qtd,0)+pend; $('#countToday').textContent=S.hoje;
 }
-setInterval(()=>{ if(S.func) atualizarContador(); },120e3);
+setInterval(()=>{ if(!$('#scrApp').hidden) atualizarContador(); },120e3);
 
 function renderQueue(){
   $('#queuePanel').hidden=!S.queue.length;
   $('#queue').innerHTML=S.queue.map((it,i)=>`<li><i class="dot" style="background:${tById(it.type).color}"></i><span style="flex:1">${it.qty}× ${esc(it.p.n)}</span><button class="x" data-rm="${i}" aria-label="Remover">×</button></li>`).join('');
 }
 function tick(){
-  const d=new Date(), h=d.getHours(), nome=S.func?S.func.nome.split(' ')[0]:'equipe';
+  const d=new Date(), h=d.getHours(), nome='equipe';
   $('#clockTime').textContent=fTime(d);
   $('#clockDate').textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
   $('#greet').textContent=`${h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}, ${nome}`;
@@ -825,7 +762,7 @@ async function abrirLog(){
   $('#logTable').innerHTML='<div class="lognone">Carregando…</div>'; $('#logDlg').showModal();
   await flushPend();
   const desde=new Date(); desde.setHours(0,0,0,0); desde.setDate(desde.getDate()-30);
-  const {data,error}=await sb.from('etq_impressoes').select('impresso_em,funcionario_nome,produto,validade,tipo,qtd,origem')
+  const {data,error}=await sb.from('etq_impressoes').select('impresso_em,produto,validade,tipo,qtd,origem')
     .eq('loja_id',S.loja).gte('impresso_em',desde.toISOString()).order('impresso_em',{ascending:false}).limit(10000);
   if(error){ $('#logTable').innerHTML='<div class="lognone">Não consegui carregar o relatório. Confira a internet e abra de novo.</div>'; return; }
   LOG.rows=data.map(r=>({...r, t:new Date(r.impresso_em)}));
@@ -841,27 +778,23 @@ function renderLog(){
   $('#logSub').textContent=wd.charAt(0).toUpperCase()+wd.slice(1);
   $('#kEtq').textContent=rows.reduce((s,r)=>s+r.qtd,0);
   $('#kProd').textContent=new Set(rows.map(r=>r.produto)).size;
-  $('#kFunc').textContent=new Set(rows.map(r=>r.funcionario_nome||'—')).size;
   document.querySelectorAll('#logTabs .tab').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===LOG.view));
   $('#copyLog').disabled=!rows.length;
   if(!rows.length){$('#logTable').innerHTML=`<div class="lognone">Nenhuma etiqueta impressa ${LOG.day===hoje?'hoje ainda':'neste dia'}.</div>`;return}
   const hr=t=>`<span class="hr">${fTime(t)}</span>`;
   if(LOG.view==='hora'){
-    $('#logTable').innerHTML=`<table class="log"><thead><tr><th>Produto impresso</th><th>Quem</th><th>Como</th><th class="q">Qtd</th></tr></thead><tbody>${
-      rows.map(r=>`<tr><td><div class="pn">${hr(r.t)}${esc(r.produto)}</div><div class="pv">Validade: ${esc(r.validade)}</div></td><td class="who-t">${esc(r.funcionario_nome||'—')}</td><td><span class="orig ${esc(r.origem)}">${esc(ORIG[r.origem]||r.origem||'')}</span></td><td class="q">${r.qtd}</td></tr>`).join('')}</tbody></table>`;
+    $('#logTable').innerHTML=`<table class="log"><thead><tr><th>Produto impresso</th><th>Como</th><th class="q">Qtd</th></tr></thead><tbody>${
+      rows.map(r=>`<tr><td><div class="pn">${hr(r.t)}${esc(r.produto)}</div><div class="pv">Validade: ${esc(r.validade)}</div></td><td><span class="orig ${esc(r.origem)}">${esc(ORIG[r.origem]||r.origem||'')}</span></td><td class="q">${r.qtd}</td></tr>`).join('')}</tbody></table>`;
   } else {
-    const key = LOG.view==='prod' ? (r=>r.produto) : (r=>r.funcionario_nome||'—');
-    const g={}; rows.forEach(r=>{const k=key(r); (g[k]=g[k]||{k,q:0,hs:[],ps:new Set()}); g[k].q+=r.qtd; g[k].hs.push(r.t); g[k].ps.add(r.produto)});
+    const g={}; rows.forEach(r=>{const k=r.produto; (g[k]=g[k]||{k,q:0,hs:[]}); g[k].q+=r.qtd; g[k].hs.push(r.t)});
     const list=Object.values(g).sort((x,y)=>y.q-x.q);
-    $('#logTable').innerHTML = LOG.view==='prod'
-      ? `<table class="log"><thead><tr><th>Produto</th><th>Horários</th><th class="q">Etiquetas</th></tr></thead><tbody>${list.map(x=>`<tr><td class="pn">${esc(x.k)}</td><td class="hs">${x.hs.sort((a,b)=>a-b).map(hr).join('')}</td><td class="q">${x.q}</td></tr>`).join('')}</tbody></table>`
-      : `<table class="log"><thead><tr><th>Funcionário</th><th>Produtos diferentes</th><th>Horários</th><th class="q">Etiquetas</th></tr></thead><tbody>${list.map(x=>`<tr><td class="pn">${esc(x.k)}</td><td class="q" style="text-align:left">${x.ps.size}</td><td class="hs">${x.hs.sort((a,b)=>a-b).map(hr).join('')}</td><td class="q">${x.q}</td></tr>`).join('')}</tbody></table>`;
+    $('#logTable').innerHTML = `<table class="log"><thead><tr><th>Produto</th><th>Horários</th><th class="q">Etiquetas</th></tr></thead><tbody>${list.map(x=>`<tr><td class="pn">${esc(x.k)}</td><td class="hs">${x.hs.sort((a,b)=>a-b).map(hr).join('')}</td><td class="q">${x.q}</td></tr>`).join('')}</tbody></table>`;
   }
 }
 function logText(){
   const rows=rowsOf(LOG.day).slice().sort((a,b)=>a.t-b.t), [a,m,d]=LOG.day.split('-');
   return `Etiquetas impressas em ${d}/${m}/${a} - ${S.lojaNome} (total: ${rows.reduce((s,r)=>s+r.qtd,0)})\n`+
-    rows.map(r=>`${fTime(r.t)} - ${r.qtd}x ${r.produto} (val. ${r.validade}) - ${r.funcionario_nome||'—'} [${ORIG[r.origem]||r.origem}]`).join('\n');
+    rows.map(r=>`${fTime(r.t)} - ${r.qtd}x ${r.produto} (val. ${r.validade}) [${ORIG[r.origem]||r.origem}]`).join('\n');
 }
 $('#openLog').onclick=abrirLog;
 $('#logDays').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(b){LOG.day=b.dataset.day;renderLog()}});
@@ -873,10 +806,9 @@ $('#copyLog').onclick=async()=>{
 };
 
 /* ================= Área do gerente ================= */
-function abrirMgr(tab='func'){
-  if(!S.func?.gerente) return;
-  $('#mgrSub').textContent=`${S.lojaNome} · ${S.func.nome}`;
-  mgrTab(tab); renderFuncs(); renderProdInfo();
+function abrirMgr(tab='prod'){
+  $('#mgrSub').textContent=S.lojaNome;
+  mgrTab(tab); renderProdInfo();
   $('#labelH').value=S.altura; $('#contaInfo').textContent=`Conectado como ${S.user.email}.`; $('#logoutConfirm').hidden=true;
   $('#mgrDlg').showModal();
 }
@@ -884,42 +816,10 @@ function mgrTab(t){
   document.querySelectorAll('#mgrTabs [data-mt]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mt===t));
   document.querySelectorAll('#mgrDlg [data-mp]').forEach(p=>p.hidden=p.dataset.mp!==t);
 }
-$('#openMgr').onclick=()=>abrirMgr('func');
+$('#openMgr').onclick=()=>pedirGerente('prod');
+$('#btnNovoPin').onclick=()=>{$('#mgrDlg').close();abrirPin('new1','etq')};
 $('#mgrTabs').addEventListener('click',e=>{const b=e.target.closest('[data-mt]');if(b)mgrTab(b.dataset.mt)});
 
-function renderFuncs(){
-  const lista=S.funcs.slice().sort((a,b)=>(b.ativo-a.ativo)||a.nome.localeCompare(b.nome));
-  $('#flist').innerHTML=lista.map(f=>`<li data-id="${esc(f.id)}">
-    <span class="fn"><span class="avatar" style="width:34px;height:34px;font-size:.85rem">${esc(ini(f.nome))}</span>${esc(f.nome)} ${f.gerente?'<span class="tagg">gerente</span>':''} ${f.ativo?'':'<span class="tagg off">desativado</span>'}</span>
-    <button class="btn sm" data-act="pin">Trocar PIN</button>
-    <button class="btn sm" data-act="ger">${f.gerente?'Tirar gerente':'Tornar gerente'}</button>
-    <button class="btn sm" data-act="ativo">${f.ativo?'Desativar':'Reativar'}</button>
-    <span class="pinrow" hidden><input class="newpin" inputmode="numeric" maxlength="4" placeholder="Novo PIN" style="width:110px;border:2px solid var(--line);border-radius:10px;padding:7px 10px"> <button class="btn sm dark" data-act="savepin">Salvar</button></span>
-  </li>`).join('');
-}
-$('#flist').addEventListener('click', async e=>{
-  const b=e.target.closest('[data-act]'); if(!b) return;
-  const li=b.closest('li'), f=S.funcs.find(x=>x.id===li.dataset.id), act=b.dataset.act;
-  const gerentesAtivos=S.funcs.filter(x=>x.gerente&&x.ativo).length;
-  let patch=null;
-  if(act==='pin'){ li.querySelector('.pinrow').hidden=false; li.querySelector('.newpin').focus(); return; }
-  if(act==='savepin'){ const v=li.querySelector('.newpin').value.trim(); if(!/^\d{4}$/.test(v)){toast('O PIN precisa ter 4 números.');return} patch={pin:await hashPin(S.loja,v)}; }
-  if(act==='ger'){ if(f.gerente && f.ativo && gerentesAtivos<=1){toast('A loja precisa ter pelo menos um gerente.');return} patch={gerente:!f.gerente}; }
-  if(act==='ativo'){ if(f.ativo && f.gerente && gerentesAtivos<=1){toast('A loja precisa ter pelo menos um gerente ativo.');return} patch={ativo:!f.ativo}; }
-  const {error}=await sb.from('etq_funcionarios').update(patch).eq('id',f.id);
-  if(error){toast('Não consegui salvar. Confira a internet.');return}
-  Object.assign(f,patch); renderFuncs(); toast(act==='savepin'?`PIN de ${f.nome} trocado`:'Salvo');
-  if(f.id===S.func.id){ S.func=f; $('#openMgr').hidden=!f.gerente; if(!f.ativo||!f.gerente){$('#mgrDlg').close(); if(!f.ativo) quem();} }
-});
-$('#fAdd').addEventListener('submit', async e=>{
-  e.preventDefault(); $('#addErr').textContent='';
-  const nome=$('#addNome').value.trim(), pin=$('#addPin').value.trim();
-  if(!/^\d{4}$/.test(pin)){ $('#addErr').textContent='O PIN precisa ter 4 números.'; return; }
-  if(S.funcs.some(f=>norm(f.nome)===norm(nome)&&f.ativo)){ $('#addErr').textContent='Já existe alguém com esse nome. Use também o sobrenome.'; return; }
-  const {data,error}=await sb.from('etq_funcionarios').insert({loja_id:S.loja,nome,pin:await hashPin(S.loja,pin),gerente:$('#addGer').checked}).select('id,nome,pin,gerente,ativo').single();
-  if(error){ $('#addErr').textContent='Não consegui cadastrar. Confira a internet.'; return; }
-  S.funcs.push(data); renderFuncs(); e.target.reset(); toast(`${data.nome} cadastrado`); $('#addNome').focus();
-});
 
 function renderProdInfo(){
   const b=S.baseInfo;
@@ -961,7 +861,7 @@ $('#file').addEventListener('change', async e=>{
     const wb=XLSX.read(await f.arrayBuffer(),{type:'array'}); let best=null;
     for(const name of wb.SheetNames){ try{const ps=importRows(XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:''})); if(!best||ps.length>best.ps.length) best={name,ps}}catch(_){} }
     if(!best) throw new Error('Não achei as colunas VALIDADE e ARMAZENAMENTO em nenhuma aba.');
-    const reg={loja_id:S.loja, nome_revisao:`${f.name.replace(/\.[^.]+$/,'')} (aba ${best.name})`, produtos:best.ps, atualizado_em:new Date().toISOString(), atualizado_por:S.func.nome};
+    const reg={loja_id:S.loja, nome_revisao:`${f.name.replace(/\.[^.]+$/,'')} (aba ${best.name})`, produtos:best.ps, atualizado_em:new Date().toISOString(), atualizado_por:'Gerente'};
     msg.textContent='Salvando para todos os computadores…';
     const {error}=await sb.from('etq_produtos').upsert(reg);
     if(error) throw new Error('Não consegui salvar na nuvem. Confira a internet.');
@@ -980,7 +880,7 @@ $('#fAlt').addEventListener('submit', async e=>{
 });
 $('#btnLogout').onclick=()=>$('#logoutConfirm').hidden=false;
 $('#logoutNo').onclick=()=>$('#logoutConfirm').hidden=true;
-$('#logoutYes').onclick=async()=>{await sb.auth.signOut();store.del('etq-func');location.reload()};
+$('#logoutYes').onclick=async()=>{await sb.auth.signOut();location.reload()};
 
 /* ================= Eventos da tela principal ================= */
 $('#q').addEventListener('input',()=>{S.idx=0;renderList()});
@@ -1017,7 +917,7 @@ $('#printQueue').onclick=()=>{if(!S.queue.length)return;doPrint(S.queue,'fila');
 
 /* ================= Início ================= */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ S.func=null; show('scrLogin'); } });
+sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT') show('scrLogin'); });
 boot();
 }
 </script>

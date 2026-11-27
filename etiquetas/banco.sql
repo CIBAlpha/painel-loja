@@ -19,18 +19,7 @@ create table if not exists public.etq_membros (
   primary key (user_id, loja_id)
 );
 
--- 3) Funcionários (escolhem o nome e digitam um PIN de 4 números)
-create table if not exists public.etq_funcionarios (
-  id        uuid primary key default gen_random_uuid(),
-  loja_id   text not null references public.etq_lojas(id) on delete cascade,
-  nome      text not null,
-  pin       text not null,            -- PIN embaralhado (não fica guardado em texto)
-  gerente   boolean not null default false,
-  ativo     boolean not null default true,
-  criado_em timestamptz not null default now()
-);
-
--- 4) Lista de produtos da revisão do mês (uma por loja)
+-- 3) Lista de produtos da revisão do mês (uma por loja)
 create table if not exists public.etq_produtos (
   loja_id        text primary key references public.etq_lojas(id) on delete cascade,
   nome_revisao   text not null,
@@ -39,22 +28,22 @@ create table if not exists public.etq_produtos (
   atualizado_por text
 );
 
--- 5) Lista da manhã e ajustes da loja
+-- 4) Lista da manhã, ajustes e PIN do gerente
 create table if not exists public.etq_config (
   loja_id       text primary key references public.etq_lojas(id) on delete cascade,
   manha         jsonb not null default '[]'::jsonb,
   altura_mm     int not null default 25,
+  pin_gerente   text,                 -- PIN do gerente embaralhado (não fica em texto)
   atualizado_em timestamptz not null default now()
 );
+alter table public.etq_config add column if not exists pin_gerente text;
 insert into public.etq_config (loja_id) values ('alphaville') on conflict (loja_id) do nothing;
 
--- 6) Registro de cada impressão
+-- 5) Registro de cada impressão
 create table if not exists public.etq_impressoes (
   id               bigserial primary key,
   loja_id          text not null references public.etq_lojas(id) on delete cascade,
   impresso_em      timestamptz not null default now(),
-  funcionario_id   uuid,
-  funcionario_nome text,
   produto          text not null,
   validade         text,
   tipo             text,
@@ -76,7 +65,6 @@ $$;
 -- Segurança: cada conta só enxerga e mexe na própria loja
 alter table public.etq_lojas        enable row level security;
 alter table public.etq_membros      enable row level security;
-alter table public.etq_funcionarios enable row level security;
 alter table public.etq_produtos     enable row level security;
 alter table public.etq_config       enable row level security;
 alter table public.etq_impressoes   enable row level security;
@@ -86,9 +74,6 @@ create policy "etq loja" on public.etq_lojas for select to authenticated using (
 drop policy if exists "etq membros" on public.etq_membros;
 create policy "etq membros" on public.etq_membros for select to authenticated using (user_id = auth.uid());
 
-drop policy if exists "etq loja" on public.etq_funcionarios;
-create policy "etq loja" on public.etq_funcionarios for all to authenticated
-  using (loja_id in (select public.etq_minhas_lojas())) with check (loja_id in (select public.etq_minhas_lojas()));
 drop policy if exists "etq loja" on public.etq_produtos;
 create policy "etq loja" on public.etq_produtos for all to authenticated
   using (loja_id in (select public.etq_minhas_lojas())) with check (loja_id in (select public.etq_minhas_lojas()));
