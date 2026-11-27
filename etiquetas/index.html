@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Etiqueta Fácil</title>
+<meta name="theme-color" content="#171211">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icones/favicon-32.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Black&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Etiqueta Fácil — app online
+   Faixa preta de marca, cartão vermelho da lista da manhã, categorias em blocos,
+   produtos em cartões e a "impressora" com a prévia da etiqueta à direita. */
+:root{
+  --ink:#1A1413; --char:#171211; --char2:#262020; --red:#C8102E; --red-dk:#9C0C23; --red-soft:#FBE7EA;
+  --paper:#F2EFEE; --card:#FFFFFF; --line:#E3DDDB; --muted:#6F6562; --gold:#E9A514; --ok:#1F7A4D;
+  --d1:#2E7D32; --d2:#1565C0; --d4:#6A1B9A; --d6:#E65100; --d16:#AD1457; --dd:#455A64; --du:#00838F;
+  --f-display:"Archivo Black","Arial Black",Impact,sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.4}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+.hint{color:var(--muted);font-size:.88rem}
+.btn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-weight:700}
+.btn:hover{border-color:var(--ink)}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff;font-family:var(--f-display);font-weight:400;font-size:1.05rem}
+.btn.red:hover{background:var(--red-dk);border-color:var(--red-dk)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sm{padding:7px 11px;font-size:.85rem;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+.field label{font-size:.85rem;color:var(--muted);font-weight:700}
+.field input{border:2px solid var(--line);border-radius:12px;padding:12px;background:#fff;font-size:16px}
+.field input:focus{border-color:var(--red);outline:none}
+.err{color:var(--red-dk);font-weight:600;font-size:.9rem;min-height:1.2em;margin-top:10px}
+
+/* ---------- Telas de entrada (login, primeiro acesso, quem está usando) ---------- */
+.gate{min-height:100vh;min-height:100dvh;background:var(--char);color:#fff;display:grid;place-items:center;padding:32px max(16px,env(safe-area-inset-left,0px));position:relative;overflow:hidden}
+.gate::before{content:"";position:absolute;right:-140px;top:-140px;width:420px;height:420px;border-radius:50%;border:70px solid rgba(200,16,46,.35)}
+.gate::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:var(--red)}
+.gbox{position:relative;z-index:1;width:100%;max-width:420px}
+.gbox.wide{max-width:900px}
+.gbrand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.logo{width:52px;height:52px;border-radius:14px;background:var(--red);display:grid;place-items:center;flex:none}
+.gbrand h1{font-family:var(--f-display);font-weight:400;font-size:1.9rem;margin:0;line-height:1}
+.gbrand p{margin:4px 0 0;color:#C9BFBD;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+.gcard{background:#fff;color:var(--ink);border-radius:20px;padding:24px}
+.gcard h2{font-family:var(--f-display);font-weight:400;font-size:1.4rem;margin:0 0 4px}
+.gcard .btn{width:100%;margin-top:16px}
+.who h2{font-family:var(--f-display);font-weight:400;font-size:clamp(1.6rem,4vw,2.4rem);margin:0 0 4px}
+.who p{color:#C9BFBD;margin:0 0 22px}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.person{background:#fff;color:var(--ink);border:0;border-radius:18px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;font-weight:800;font-size:1.02rem;transition:transform .12s,box-shadow .12s}
+.person:hover{transform:translateY(-2px);box-shadow:0 8px 0 var(--red)}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-size:1.5rem}
+.person small{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
+.gfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;color:#C9BFBD;font-size:.85rem}
+.linkbtn{background:none;border:0;color:#fff;text-decoration:underline;padding:0;font-weight:600}
+/* teclado do PIN */
+.pinbox{text-align:center}
+.pinbox .avatar{margin:0 auto 10px}
+.dots{display:flex;justify-content:center;gap:14px;margin:18px 0 8px}
+.dots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);display:block}
+.dots i.on{background:var(--ink)}
+.dots.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.pad button{height:62px;border-radius:14px;border:0;background:var(--paper);font-family:var(--f-display);font-size:1.5rem}
+.pad button:hover{background:var(--line)}
+.pad .fn{font-family:var(--f-body);font-size:.9rem;font-weight:700}
+
+/* ---------- App ---------- */
+.top{background:var(--char);color:#fff;border-bottom:4px solid var(--red)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0}
+.brand .logo{width:46px;height:46px;border-radius:12px}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:1.5rem;margin:0;line-height:1}
+.brand p{margin:3px 0 0;color:#C9BFBD;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.clock{text-align:right}
+.clock b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.45rem;line-height:1}
+.clock span{font-size:.8rem;color:#C9BFBD;text-transform:capitalize}
+.chipbtn{display:flex;align-items:center;gap:10px;background:var(--char2);border:1px solid #3A3231;border-radius:12px;padding:8px 14px;color:#fff;text-align:left;transition:border-color .15s,background .15s}
+.chipbtn:hover{border-color:var(--red);background:#2F2827}
+.chipbtn b{font-family:var(--f-display);font-weight:400;font-size:1.45rem;line-height:1}
+.chipbtn span{font-size:.72rem;color:#C9BFBD;line-height:1.15;text-transform:uppercase;letter-spacing:.05em}
+.chipbtn .av{width:34px;height:34px;border-radius:50%;background:var(--red);display:grid;place-items:center;font-family:var(--f-display);font-size:.95rem;flex:none}
+.chipbtn .nm{font-weight:800;font-size:.95rem;color:#fff;text-transform:none;letter-spacing:0;display:block}
+.gear{background:transparent;border:1px solid #4A4140;color:#fff;border-radius:12px;padding:10px 14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.gear:hover{background:var(--char2)}
+.net{font-size:.75rem;font-weight:700;color:#FFD5DB;background:rgba(200,16,46,.35);border-radius:999px;padding:4px 10px}
+
+.hero{margin-block:20px 16px;background:var(--red);color:#fff;border-radius:20px;padding:22px 24px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-30px;top:-40px;width:240px;height:240px;border-radius:50%;border:38px solid rgba(255,255,255,.08);pointer-events:none}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:700;color:#FFD5DB;margin:0}
+.hero h2{font-family:var(--f-display);font-weight:400;font-size:clamp(1.7rem,3.4vw,2.6rem);margin:4px 0 6px;line-height:1.05;text-wrap:balance}
+.hero .stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:#FFE9EC}
+.hero .stats b{font-size:1.25rem;color:#fff}
+.hero-actions{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1}
+.bigprint{background:#fff;color:var(--red-dk);border:0;border-radius:14px;padding:16px 26px;font-family:var(--f-display);font-size:1.15rem;display:flex;align-items:center;gap:10px;justify-content:center;box-shadow:0 6px 0 var(--red-dk);transition:transform .08s,box-shadow .08s}
+.bigprint:active{transform:translateY(4px);box-shadow:0 2px 0 var(--red-dk)}
+.bigprint:disabled{opacity:.6;cursor:not-allowed}
+.ghost{background:transparent;border:2px solid rgba(255,255,255,.5);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700}
+.ghost:hover{background:rgba(255,255,255,.12)}
+.dailybox{grid-column:1/-1;background:#fff;color:var(--ink);border-radius:14px;padding:8px 14px;position:relative;z-index:1}
+.dailybox ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 18px}
+.dailybox li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.dailybox .name{flex:1;min-width:0;font-weight:600;font-size:.92rem}
+.dailybox .name small{display:block;font-weight:500;color:var(--muted)}
+.dailybox .miss{color:var(--red)}
+.mini{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:1.1rem;flex:none}
+.mini:hover{border-color:var(--ink)}
+.dailybox .n{min-width:2ch;text-align:center;font-weight:800}
+.dailybox .empty{padding:12px 4px;color:var(--muted)}
+
+.cats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.cat{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 14px 10px 10px;font-weight:700;font-size:.92rem;text-align:left;transition:border-color .15s,transform .15s}
+.cat:hover{border-color:var(--ink);transform:translateY(-1px)}
+.cat .ic{width:34px;height:34px;border-radius:10px;background:var(--paper);display:grid;place-items:center;flex:none}
+.cat small{display:block;font-weight:500;color:var(--muted);font-size:.75rem}
+.cat[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.cat[aria-pressed="true"] .ic{background:var(--red);color:#fff}
+.cat[aria-pressed="true"] small{color:#C9BFBD}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:22px;align-items:start;padding-bottom:40px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+.searchbox{position:relative}
+.searchbox svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search{width:100%;font-size:1.5rem;font-weight:600;padding:16px 18px 16px 58px;border:2px solid var(--line);border-radius:16px;background:var(--card)}
+.search:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 4px var(--red-soft)}
+.subbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;margin:10px 2px 14px;color:var(--muted);font-size:.85rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
+kbd{font-family:var(--f-body);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pcard{position:relative;display:flex;flex-direction:column}
+.pcard .pick{flex:1;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 52px 14px 14px;display:flex;flex-direction:column;gap:8px;transition:border-color .12s,box-shadow .12s}
+.pcard .pick:hover{border-color:#B9AFAC}
+.pcard .pick[aria-selected="true"]{border-color:var(--red);box-shadow:0 0 0 4px var(--red-soft)}
+.badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 9px;border-radius:999px;color:#fff}
+.pcard .nm{font-weight:700;line-height:1.25;font-size:.98rem}
+.pcard .st{font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:5px}
+.star{position:absolute;top:8px;right:8px;width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:#CFC7C5;display:grid;place-items:center;transition:transform .15s,color .15s}
+.star:hover{background:var(--paper)}
+.star[aria-pressed="true"]{color:var(--gold)}
+.star[aria-pressed="true"] svg{fill:currentColor}
+.star:active{transform:scale(1.2)}
+.more,.none{grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;font-size:.9rem}
+.none{background:var(--card);border:2px dashed var(--line);border-radius:16px;padding:28px}
+.none .btn{margin-top:12px}
+
+aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+@media (max-width:980px){aside{position:static}}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px}
+.panel h3{margin:0 0 10px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.printer{background:linear-gradient(#2B2524,#191414);border-radius:16px 16px 10px 10px;padding:14px 16px 0}
+.printer .lbl{display:flex;justify-content:space-between;color:#9D9391;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
+.printer .led{width:8px;height:8px;border-radius:50%;background:#3DDC84;box-shadow:0 0 8px #3DDC84;display:inline-block;margin-right:6px}
+.printer .slot{height:10px;background:#0B0909;border-radius:6px;margin-top:12px}
+.feed{overflow:hidden;display:flex;justify-content:center;padding:0 0 18px;background:linear-gradient(var(--paper),var(--card) 30%)}
+.feed .out{zoom:1.45;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18))}
+.feed .out.anim{animation:feed .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes feed{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.feed .out.anim,.dots.shake{animation:none}.cat,.star,.bigprint,.person{transition:none}}
+.pname{font-weight:800;font-size:1.05rem;line-height:1.25;margin:4px 0 12px;min-height:1.3em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);border-radius:999px;padding:7px 12px;background:#fff;font-weight:700;font-size:.88rem;display:flex;gap:6px;align-items:center}
+.chip small{font-weight:500;opacity:.75}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+.row2{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;flex-wrap:wrap}
+.qty{display:flex;align-items:center;gap:6px;background:var(--paper);border-radius:14px;padding:4px}
+.qty button{width:44px;height:44px;font-size:1.4rem;border-radius:11px;border:0;background:#fff}
+.qty output{font-family:var(--f-display);font-size:1.4rem;min-width:2ch;text-align:center}
+.actions{display:flex;gap:10px;margin-top:12px}
+.actions .btn{flex:1}
+.queue ul{list-style:none;margin:0;padding:0}
+.queue li{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.queue .x{border:0;background:none;color:var(--muted);font-size:1.3rem}
+
+/* ---------- Janelas (relatório e área do gerente) ---------- */
+dialog{border:0;border-radius:18px;background:#fff;color:var(--ink);width:calc(100% - 32px);padding:0;overflow:hidden}
+dialog::backdrop{background:rgba(23,18,17,.55)}
+dialog.big{max-width:880px}
+.dhead{background:var(--char);color:#fff;padding:20px 24px 16px;border-bottom:4px solid var(--red)}
+.dhead .t{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.dhead h2{font-family:var(--f-display);font-weight:400;margin:0}
+.dhead p{margin:2px 0 0;color:#C9BFBD;font-size:.88rem}
+.xbtn{background:transparent;border:1px solid #4A4140;color:#fff;border-radius:10px;width:40px;height:40px;font-size:1.3rem;flex:none}
+.pills{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:2px}
+.pill{flex:none;border:1px solid #4A4140;background:transparent;color:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:.88rem;white-space:nowrap}
+.pill small{font-weight:500;color:#C9BFBD;margin-left:4px}
+.pill[aria-pressed="true"]{background:var(--red);border-color:var(--red)}
+.pill[aria-pressed="true"] small{color:#FFD5DB}
+.dbody{padding:18px 24px 22px;max-height:64vh;overflow-y:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--paper);border-radius:14px;padding:12px 14px}
+.kpi b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.7rem;line-height:1.1}
+.kpi span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tab{border:2px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font-weight:700;font-size:.88rem}
+.tab[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tablewrap{overflow-x:auto;border:2px solid var(--line);border-radius:14px}
+table.log{width:100%;border-collapse:collapse;font-size:.9rem;min-width:560px}
+table.log th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:10px 12px;background:var(--paper);border-bottom:1px solid var(--line)}
+table.log td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.log tr:last-child td{border-bottom:0}
+table.log td.q,table.log th.q{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+table.log .pn{font-weight:700}
+table.log .pv{color:var(--muted);font-size:.82rem}
+table.log .hr{display:inline-block;font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--ink);color:#fff;border-radius:6px;padding:1px 7px;margin-right:8px;font-size:.82rem;font-weight:800}
+table.log td.hs .hr{margin:0 4px 4px 0}
+.who-t{font-weight:700;white-space:nowrap}
+.orig{display:inline-block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px;background:var(--paper);white-space:nowrap}
+.orig.manha{background:var(--red-soft);color:var(--red-dk)}
+.orig.fila{background:#E8EEF7;color:#1F4E8C}
+.lognone{text-align:center;color:var(--muted);padding:30px 10px}
+.dfoot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:14px}
+.dfoot .hint{margin:0;max-width:52ch}
+/* área do gerente */
+.mgsec{border:2px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.mgsec h3{margin:0 0 4px;font-size:1.02rem}
+.mgsec > p{margin:0 0 10px}
+.flist{list-style:none;margin:0;padding:0}
+.flist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.flist li:last-child{border-bottom:0}
+.flist .fn{flex:1 1 160px;font-weight:700;display:flex;align-items:center;gap:8px;min-width:0}
+.tagg{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:var(--ink);color:#fff;border-radius:999px;padding:2px 8px}
+.tagg.off{background:var(--line);color:var(--muted)}
+.inline{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.inline .field{margin-top:0;flex:1 1 140px}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;padding-bottom:12px}
+.check input{width:20px;height:20px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;display:none;z-index:50;border-left:5px solid var(--red);max-width:calc(100% - 32px)}
+
+/* A etiqueta impressa: NÃO MEXER (é o tamanho que funciona na Brother) */
+.label{width:58mm;min-height:20mm;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;padding:3mm 1mm 1mm;display:flex;flex-direction:column;justify-content:flex-start;gap:.5mm;line-height:1.1}
+.label .r{display:flex;align-items:baseline;gap:1mm}
+.label .k{flex:none;width:18.5mm;text-align:right;font-size:5pt;white-space:nowrap;letter-spacing:.01em;color:#000}
+.label .v{font-weight:700;min-width:0}
+.label .big{font-size:8pt}
+.label .med{font-size:7pt}
+.label .sm{font-size:5.8pt;font-weight:400}
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+  :root,html,body{padding:0!important;margin:0!important;background:#fff}
+  #printArea .label{margin:0 auto;min-height:0!important}
+  #printArea .label:not(:last-child){page-break-after:always;break-after:page}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN DA LOJA ============ -->
+<section class="gate" id="scrLogin" hidden>
+  <div class="gbox">
+    <div class="gbrand"><div class="logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#fff"/></svg></div><div><h1>Etiqueta Fácil</h1><p>China in Box</p></div></div>
+    <form class="gcard" id="fLogin">
+      <h2>Entrar</h2>
+      <p class="hint">Use o e-mail e a senha da loja. Só precisa fazer isso uma vez em cada computador.</p>
+      <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="btn red" id="btnEntrar" type="submit">Entrar</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ AVISO (sem acesso / erro) ============ -->
+<section class="gate" id="scrMsg" hidden>
+  <div class="gbox"><div class="gcard"><h2 id="msgTitle">Aguarde</h2><p class="hint" id="msgText"></p><button class="btn" id="msgBtn" hidden>Sair desta conta</button></div></div>
+</section>
+
+<!-- ============ PRIMEIRO ACESSO: CADASTRAR GERENTE ============ -->
+<section class="gate" id="scrSetup" hidden>
+  <div class="gbox">
+    <div class="gbrand"><div class="logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></div><div><h1>Bem-vindo!</h1><p id="setupLoja"></p></div></div>
+    <form class="gcard" id="fSetup">
+      <h2>Cadastre o gerente</h2>
+      <p class="hint">É a primeira vez que a loja usa o app. Cadastre quem vai cuidar dele. Depois, na área do gerente, você cadastra os funcionários.</p>
+      <div class="field"><label for="setNome">Nome</label><input id="setNome" required maxlength="30"></div>
+      <div class="field"><label for="setPin">PIN de 4 números</label><input id="setPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off"></div>
+      <div class="err" id="setupErr" role="alert"></div>
+      <button class="btn red" type="submit">Cadastrar e entrar</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ QUEM ESTÁ USANDO ============ -->
+<section class="gate" id="scrWho" hidden>
+  <div class="gbox wide who">
+    <div class="gbrand"><div class="logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#fff"/></svg></div><div><h1>Etiqueta Fácil</h1><p id="whoLoja"></p></div></div>
+    <h2>Quem está usando?</h2>
+    <p>Toque no seu nome e digite o seu PIN.</p>
+    <div class="people" id="people"></div>
+    <div class="gfoot"><span id="whoInfo"></span><button class="linkbtn" id="whoLogout">Sair da conta da loja</button></div>
+  </div>
+</section>
+
+<dialog id="pinDlg" style="max-width:360px">
+  <div class="dbody pinbox">
+    <div class="avatar" id="pinAv"></div>
+    <h2 id="pinNome" style="font-family:var(--f-display);font-weight:400;margin:0"></h2>
+    <p class="hint" style="margin:4px 0 0">Digite o seu PIN</p>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="err" id="pinErr" role="alert" style="margin-top:0"></div>
+    <div class="pad" id="pad"></div>
+  </div>
+</dialog>
+
+<!-- ============ APP ============ -->
+<div id="scrApp" hidden>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#fff"/></svg></div>
+      <div><h1>Etiqueta Fácil</h1><p id="lojaNome">China in Box</p></div>
+    </div>
+    <span class="net" id="netWarn" hidden>Sem internet: as impressões serão registradas quando voltar</span>
+    <button class="chipbtn" id="openLog" aria-label="Ver etiquetas impressas hoje"><b id="countToday" class="num">0</b><span>etiquetas<br>impressas hoje</span></button>
+    <button class="chipbtn" id="switchUser" aria-label="Trocar de funcionário"><span class="av" id="meAv"></span><span><span class="nm" id="meNome"></span>trocar</span></button>
+    <div class="clock"><b id="clockTime" class="num">--:--</b><span id="clockDate"></span></div>
+    <button class="gear" id="openMgr" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Gerente</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero" aria-labelledby="heroTitle">
+    <div style="position:relative;z-index:1">
+      <p class="eyebrow" id="greet">Bom dia</p>
+      <h2 id="heroTitle">Lista da manhã</h2>
+      <div class="stats"><span><b id="dProd" class="num">0</b> produtos</span><span><b id="dEtq" class="num">0</b> etiquetas</span><span>com a data de hoje</span></div>
+    </div>
+    <div class="hero-actions">
+      <button class="bigprint" id="printDaily"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span id="printDailyTxt">Imprimir tudo</span></button>
+      <button class="ghost" id="toggleBox" aria-expanded="false">Ver e editar a lista</button>
+    </div>
+    <div class="dailybox" id="dailyBox" hidden>
+      <ul id="daily"></ul>
+      <p class="empty" id="dailyEmpty">A lista está vazia. Toque na estrela de um produto para ele sair todo dia de manhã.</p>
+    </div>
+  </section>
+
+  <nav class="cats" id="cats" aria-label="Categorias"></nav>
+
+  <div class="grid">
+    <section aria-label="Produtos">
+      <div class="searchbox">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" class="search" type="search" placeholder="Buscar produto… ex: acelga" autocomplete="off" aria-label="Buscar produto">
+      </div>
+      <div class="subbar">
+        <div class="legend" id="legend"></div>
+        <span><kbd>↑</kbd> <kbd>↓</kbd> escolhe · <kbd>Enter</kbd> imprime</span>
+      </div>
+      <div class="cards" id="list" role="listbox" aria-label="Produtos"></div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <div class="printer"><div class="lbl"><span><i class="led"></i>Brother QL-800</span><span>62 mm</span></div><div class="slot"></div></div>
+        <div class="feed"><div class="out" id="preview"></div></div>
+        <div class="pname" id="pname">Escolha um produto</div>
+        <h3>Validade</h3>
+        <div class="chips" id="chips"></div>
+        <div class="row2">
+          <div class="qty" aria-label="Quantidade"><button id="minus" aria-label="Menos">−</button><output id="qtyOut" class="num">1</output><button id="plus" aria-label="Mais">+</button></div>
+          <button class="btn" id="toggleDaily" disabled>☆ Lista da manhã</button>
+        </div>
+        <div class="actions">
+          <button class="btn" id="addQueue" disabled>Pôr na fila</button>
+          <button class="btn red" id="printNow" disabled>Imprimir</button>
+        </div>
+      </div>
+      <div class="panel queue" id="queuePanel" hidden>
+        <h3>Fila de impressão</h3>
+        <ul id="queue"></ul>
+        <div class="actions"><button class="btn" id="clearQueue">Limpar</button><button class="btn red" id="printQueue">Imprimir fila</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+
+<!-- ============ RELATÓRIO ============ -->
+<dialog id="logDlg" class="big" aria-labelledby="logTitle">
+  <div class="dhead">
+    <div class="t"><div><h2 id="logTitle">Etiquetas impressas</h2><p id="logSub"></p></div><button class="xbtn" data-close aria-label="Fechar">×</button></div>
+    <div class="pills" id="logDays"></div>
+  </div>
+  <div class="dbody">
+    <div class="kpis">
+      <div class="kpi"><b id="kEtq" class="num">0</b><span>etiquetas</span></div>
+      <div class="kpi"><b id="kProd" class="num">0</b><span>produtos diferentes</span></div>
+      <div class="kpi"><b id="kFunc" class="num">0</b><span>funcionários</span></div>
+    </div>
+    <div class="tabs" id="logTabs"><button class="tab" data-view="hora" aria-pressed="true">Por horário</button><button class="tab" data-view="prod" aria-pressed="false">Por produto</button><button class="tab" data-view="func" aria-pressed="false">Por funcionário</button></div>
+    <div class="tablewrap" id="logTable"></div>
+    <div class="dfoot">
+      <p class="hint">Conta quando alguém manda imprimir. Vale para todos os computadores da loja e fica guardado na nuvem.</p>
+      <button class="btn" id="copyLog">Copiar lista</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============ ÁREA DO GERENTE ============ -->
+<dialog id="mgrDlg" class="big" aria-labelledby="mgrTitle">
+  <div class="dhead">
+    <div class="t"><div><h2 id="mgrTitle">Área do gerente</h2><p id="mgrSub"></p></div><button class="xbtn" data-close aria-label="Fechar">×</button></div>
+    <div class="pills" id="mgrTabs"><button class="pill" data-mt="func" aria-pressed="true">Funcionários</button><button class="pill" data-mt="prod" aria-pressed="false">Lista de produtos</button><button class="pill" data-mt="etq" aria-pressed="false">Etiqueta</button><button class="pill" data-mt="conta" aria-pressed="false">Conta</button></div>
+  </div>
+  <div class="dbody">
+    <div data-mp="func">
+      <div class="mgsec">
+        <h3>Cadastrar funcionário</h3>
+        <p class="hint">Cada um escolhe o nome e digita o PIN para usar. Assim o relatório mostra quem imprimiu.</p>
+        <form class="inline" id="fAdd">
+          <div class="field"><label for="addNome">Nome</label><input id="addNome" required maxlength="30"></div>
+          <div class="field" style="flex:0 1 130px"><label for="addPin">PIN (4 números)</label><input id="addPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off"></div>
+          <label class="check"><input type="checkbox" id="addGer"> Gerente</label>
+          <button class="btn red" type="submit" style="margin-bottom:2px">Cadastrar</button>
+        </form>
+        <div class="err" id="addErr" role="alert"></div>
+      </div>
+      <div class="mgsec"><h3>Equipe</h3><ul class="flist" id="flist"></ul></div>
+    </div>
+    <div data-mp="prod" hidden>
+      <div class="mgsec">
+        <h3>Lista de produtos atual</h3>
+        <p id="prodInfo" class="hint"></p>
+      </div>
+      <div class="mgsec">
+        <h3>Atualizar com a revisão do mês</h3>
+        <p class="hint">Escolha a planilha da etiquetadora (a .xls do Drive de QA). A lista nova vale na hora para todos os computadores da loja. A lista da manhã é mantida.</p>
+        <input type="file" id="file" accept=".xls,.xlsx,.csv">
+        <div class="err" id="importMsg" role="status" style="color:var(--ink)"></div>
+      </div>
+    </div>
+    <div data-mp="etq" hidden>
+      <div class="mgsec">
+        <h3>Tamanho da etiqueta</h3>
+        <p class="hint">Use o mesmo número do "Comprimento" configurado na Brother. Hoje: 25 mm.</p>
+        <form class="inline" id="fAlt"><div class="field" style="flex:0 1 160px"><label for="labelH">Altura (mm)</label><input id="labelH" type="number" min="15" max="80"></div><button class="btn dark" type="submit">Salvar</button></form>
+      </div>
+    </div>
+    <div data-mp="conta" hidden>
+      <div class="mgsec">
+        <h3>Conta da loja neste computador</h3>
+        <p class="hint" id="contaInfo"></p>
+        <button class="btn" id="btnLogout">Sair da conta neste computador</button>
+        <div id="logoutConfirm" hidden style="margin-top:10px"><p class="hint">Depois será preciso digitar o e-mail e a senha da loja de novo. Confirmar?</p><div class="actions"><button class="btn" id="logoutNo">Cancelar</button><button class="btn red" id="logoutYes">Sair</button></div></div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<div id="printArea"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+/* ================= Conexão ================= */
+const SUPABASE_URL = 'https://vncwdtbpiwfnzdjpjnjb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-QCXTWF3ytzFjpqmdMaxoQ_cppzjiU9';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'etiquetas-auth', persistSession: true, autoRefreshToken: true } });
+const IDLE_MIN = 10;   // minutos parado até voltar para "Quem está usando?"
+
+/* ================= Utilidades ================= */
+const $ = s => document.querySelector(s);
+const show = id => { ['scrLogin','scrMsg','scrSetup','scrWho','scrApp'].forEach(s => $('#'+s).hidden = s !== id); };
+const norm = s => (s||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const esc = s => (s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = n => String(n).padStart(2,'0');
+const fDate = d => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+const fTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const dayKey = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const diasTxt = v => `${v} dia${v==1?'':'s'}`;
+const ini = n => (n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const store = {
+  get(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+async function hashPin(loja, pin){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`etq:${loja}:${pin}`));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2800)}
+const svg = (p,s=20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+document.querySelectorAll('dialog [data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
+
+/* ================= Estado ================= */
+const S = { user:null, loja:null, lojaNome:'', papel:'', funcs:[], func:null, products:[], baseNome:'', baseInfo:null,
+            manha:[], altura:25, sel:null, type:'d', qty:1, idx:0, results:[], cat:'', total:0, queue:[], hoje:0 };
+
+/* ================= Validades ================= */
+const TYPES = [
+  {id:'d', label:'Dias', color:'var(--dd)'},
+  {id:'usodia', label:'Uso do dia', color:'var(--du)'},
+  {id:'1h', label:'1 hora', h:1, color:'var(--d1)'},
+  {id:'2h', label:'2 horas', h:2, color:'var(--d2)'},
+  {id:'4h', label:'4 horas', h:4, color:'var(--d4)'},
+  {id:'6h', label:'6 horas', h:6, color:'var(--d6)'},
+  {id:'16h', label:'16 horas', h:16, color:'var(--d16)'},
+  {id:'24h', label:'24 horas', h:24, color:'var(--dd)'},
+  {id:'fab', label:'Fabricante', color:'var(--dd)', fixo:true},
+  {id:'sem', label:'Sem validade', color:'var(--dd)', fixo:true}
+];
+const tById = id => TYPES.find(t=>t.id===id) || TYPES[0];
+function defaultType(p){ if(p.k==='h'){const t=TYPES.find(t=>t.h===p.v);return t?t.id:'1h'} return p.k; }
+function metaTxt(p){const t=defaultType(p);return t==='d'?diasTxt(p.v):tById(t).label}
+function compute(p,typeId,now=new Date()){
+  const t = tById(typeId), r = {made:fDate(now)};
+  if(t.id==='d'){const v=new Date(now);v.setDate(v.getDate()+(p.v||0));r.val=fDate(v)}
+  else if(t.id==='usodia'){r.val=fDate(now)+' (uso do dia)'}
+  else if(t.id==='fab'){r.val='conforme fabricante'}
+  else if(t.id==='sem'){r.val='sem validade'}
+  else {const v=new Date(now.getTime()+t.h*3600e3);r.val=`${fDate(v)} às ${fTime(v)}`}
+  return r;
+}
+// Etiqueta impressa: mesmo modelo que já funciona na Brother
+function labelHTML(p,typeId){
+  const c = compute(p,typeId);
+  const ps = p.n.length>48 ? 5.4 : p.n.length>38 ? 6 : p.n.length>28 ? 6.8 : 7.6;
+  return `<div class="label" style="min-height:${S.altura}mm">
+    <div class="r"><span class="k">PRODUTOS:</span><span class="v" style="font-size:${ps}pt">${esc(p.n)}</span></div>
+    <div class="r"><span class="k">DATA:</span><span class="v big">${c.made}</span></div>
+    <div class="r"><span class="k">VALIDADE:</span><span class="v big">${esc(c.val)}</span></div>
+    ${p.a?`<div class="r"><span class="k">ARMAZENAMENTO:</span><span class="v med">${esc(p.a)}</span></div>`:''}
+    ${p.o?`<div class="r"><span class="k">OBSERVAÇÃO:</span><span class="v sm">${esc(p.o)}</span></div>`:''}
+  </div>`;
+}
+
+/* ================= Ícones das categorias ================= */
+const I = {
+  todas:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  fav:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z"/>',
+  dias:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  sol:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  peixe:'<path d="M3 12c3-4 8-6 12-4l4-3v14l-4-3c-4 2-9 0-12-4Z"/><circle cx="8" cy="11" r=".8" fill="currentColor"/>',
+  panela:'<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z"/><path d="M2 10h2M20 10h2M9 6c0-1 1-1 1-2M14 6c0-1 1-1 1-2"/>',
+  gel:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M5 9h14M8 5v2M8 12v3"/>',
+  relogio:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  frasco:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7 15h10"/>',
+  pessoa:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  gota:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/>'
+};
+function iconFor(c){
+  const u=norm(c);
+  if(u.includes('marinando')) return I.gota;
+  if(u.includes('validade') && /\dh/.test(u)) return I.relogio;
+  if(u.includes('dias')) return I.dias;
+  if(u.includes('uso do dia')) return I.sol;
+  if(u.includes('sushi')) return I.peixe;
+  if(u.includes('cozinha')) return I.panela;
+  if(u.includes('geladeira')) return I.gel;
+  if(u.includes('quimic')) return I.frasco;
+  if(u.includes('colaborador')) return I.pessoa;
+  return I.todas;
+}
+
+/* ================= Entrada: login, gerente, quem está usando ================= */
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ show('scrLogin'); setTimeout(()=>$('#email').focus(),50); return; }
+  S.user = session.user;
+  try{ await carregar(); }
+  catch(e){ console.error(e); mensagem('Não consegui abrir o app','Confira a internet e tente de novo. Se continuar, avise o gerente. Detalhe: '+(e.message||e), true); }
+}
+function mensagem(t,txt,sair){ $('#msgTitle').textContent=t; $('#msgText').textContent=txt; $('#msgBtn').hidden=!sair; show('scrMsg'); }
+$('#msgBtn').onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+$('#fLogin').addEventListener('submit', async e=>{
+  e.preventDefault(); $('#loginErr').textContent=''; $('#btnEntrar').disabled=true;
+  const { error } = await sb.auth.signInWithPassword({ email:$('#email').value.trim(), password:$('#senha').value });
+  $('#btnEntrar').disabled=false;
+  if(error){ $('#loginErr').textContent='E-mail ou senha incorretos. Confira e tente de novo.'; return; }
+  boot();
+});
+
+async function carregar(){
+  mensagem('Abrindo…','Carregando a loja.');
+  const m = await sb.from('etq_membros').select('loja_id,papel').eq('user_id', S.user.id).limit(1);
+  if(m.error) throw m.error;
+  if(!m.data.length){ mensagem('Esta conta ainda não tem acesso','O login funcionou, mas esta conta não está ligada a nenhuma loja. Peça ao responsável para liberar o acesso no Supabase.', true); return; }
+  S.loja = m.data[0].loja_id; S.papel = m.data[0].papel;
+  const [lj, cf, pr, fu] = await Promise.all([
+    sb.from('etq_lojas').select('nome').eq('id',S.loja).maybeSingle(),
+    sb.from('etq_config').select('manha,altura_mm').eq('loja_id',S.loja).maybeSingle(),
+    sb.from('etq_produtos').select('nome_revisao,produtos,atualizado_em,atualizado_por').eq('loja_id',S.loja).maybeSingle(),
+    sb.from('etq_funcionarios').select('id,nome,pin,gerente,ativo').eq('loja_id',S.loja).order('nome')
+  ]);
+  for(const r of [lj,cf,pr,fu]) if(r.error) throw r.error;
+  S.lojaNome = lj.data?.nome || S.loja;
+  S.manha = cf.data?.manha || []; S.altura = cf.data?.altura_mm || 25;
+  if(!cf.data) await sb.from('etq_config').insert({loja_id:S.loja});
+  if(pr.data){ S.products = pr.data.produtos||[]; S.baseNome = pr.data.nome_revisao; S.baseInfo = pr.data; }
+  S.funcs = fu.data || [];
+  $('#lojaNome').textContent = $('#whoLoja').textContent = $('#setupLoja').textContent = S.lojaNome;
+  flushPend();
+  if(!S.funcs.filter(f=>f.ativo).length){ show('scrSetup'); setTimeout(()=>$('#setNome').focus(),50); return; }
+  const lembrado = store.get('etq-func', null);
+  const f = lembrado && S.funcs.find(x=>x.id===lembrado.id && x.ativo);
+  if(f && Date.now()-lembrado.t < IDLE_MIN*60e3) entrar(f); else quem();
+}
+
+$('#fSetup').addEventListener('submit', async e=>{
+  e.preventDefault(); const pin=$('#setPin').value.trim(), nome=$('#setNome').value.trim();
+  if(!/^\d{4}$/.test(pin)){ $('#setupErr').textContent='O PIN precisa ter 4 números.'; return; }
+  const { data, error } = await sb.from('etq_funcionarios').insert({loja_id:S.loja, nome, pin:await hashPin(S.loja,pin), gerente:true}).select('id,nome,pin,gerente,ativo').single();
+  if(error){ $('#setupErr').textContent='Não consegui cadastrar. Confira a internet e tente de novo.'; return; }
+  S.funcs=[data]; entrar(data);
+});
+
+function quem(){
+  S.func=null; store.del('etq-func');
+  const ativos=S.funcs.filter(f=>f.ativo);
+  $('#people').innerHTML = ativos.map(f=>`<button class="person" data-f="${esc(f.id)}"><span class="avatar">${esc(ini(f.nome))}</span>${esc(f.nome)}${f.gerente?'<small>gerente</small>':''}</button>`).join('');
+  $('#whoInfo').textContent = `${ativos.length} ${ativos.length==1?'pessoa cadastrada':'pessoas cadastradas'}`;
+  document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+  show('scrWho');
+}
+$('#people').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b)abrirPin(S.funcs.find(f=>f.id===b.dataset.f))});
+$('#whoLogout').onclick=async()=>{await sb.auth.signOut();store.del('etq-func');location.reload()};
+
+let pinFor=null, pinVal='';
+function abrirPin(f){
+  pinFor=f; pinVal=''; $('#pinAv').textContent=ini(f.nome); $('#pinNome').textContent=f.nome; $('#pinErr').textContent='';
+  $('#pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('')+'<button class="fn" data-k="x">Cancelar</button><button data-k="0">0</button><button class="fn" data-k="b">Apagar</button>';
+  dots(); $('#pinDlg').showModal();
+}
+function dots(){ document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i<pinVal.length)); }
+async function pinTecla(k){
+  if(!pinFor) return;
+  if(k==='x'){ $('#pinDlg').close(); return; }
+  if(k==='b'){ pinVal=pinVal.slice(0,-1); dots(); return; }
+  if(!/\d/.test(k) || pinVal.length>=4) return;
+  pinVal+=k; dots();
+  if(pinVal.length===4){
+    const ok = (await hashPin(S.loja,pinVal)) === pinFor.pin;
+    if(ok){ $('#pinDlg').close(); entrar(pinFor); }
+    else { $('#pinErr').textContent='PIN errado. Tente de novo.'; const d=$('#dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); pinVal=''; setTimeout(dots,250); }
+  }
+}
+$('#pad').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)pinTecla(b.dataset.k)});
+$('#pinDlg').addEventListener('keydown',e=>{ if(/^\d$/.test(e.key)) pinTecla(e.key); else if(e.key==='Backspace') pinTecla('b'); });
+
+function entrar(f){
+  S.func=f; store.set('etq-func',{id:f.id,t:Date.now()});
+  $('#meAv').textContent=ini(f.nome); $('#meNome').textContent=f.nome.split(' ')[0];
+  $('#openMgr').hidden=!f.gerente;
+  show('scrApp'); renderTudo(); atualizarContador(); setTimeout(()=>$('#q').focus(),50);
+}
+$('#switchUser').onclick=quem;
+
+// Volta para "Quem está usando?" depois de um tempo parado
+let lastAct=Date.now();
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now(); if(S.func) store.set('etq-func',{id:S.func.id,t:lastAct});},{passive:true}));
+setInterval(()=>{ if(S.func && !$('#scrApp').hidden && Date.now()-lastAct > IDLE_MIN*60e3) quem(); },30e3);
+
+/* ================= Tela principal ================= */
+function renderTudo(){ renderLegend(); renderCats(); renderList(); renderDaily(); renderChips(); renderPreview(false); tick(); }
+function renderLegend(){
+  $('#legend').innerHTML = TYPES.filter(t=>!t.fixo&&t.id!=='24h').map(t=>`<span><i class="dot" style="background:${t.color}"></i>${t.label}</span>`).join('');
+}
+function renderCats(){
+  const cnt={}; S.products.forEach(p=>{if(p.s)cnt[p.s]=(cnt[p.s]||0)+1});
+  const tile=(id,nome,ic,n)=>`<button class="cat" data-cat="${esc(id)}" aria-pressed="${S.cat===id}"><span class="ic">${svg(ic)}</span><span>${esc(nome)}<small class="num">${n} ${n==1?'item':'itens'}</small></span></button>`;
+  $('#cats').innerHTML = !S.products.length ? '' : tile('','Todos',I.todas,S.products.length) + tile('*fav','Lista da manhã',I.fav,S.manha.length)
+    + Object.keys(cnt).map(c=>tile(c,c,iconFor(c),cnt[c])).join('');
+}
+const inDaily = p => S.manha.some(d=>d.n===p.n);
+function renderList(){
+  const el=$('#list');
+  if(!S.products.length){
+    el.innerHTML = `<div class="none"><b>Nenhuma lista de produtos carregada ainda.</b><br>${S.func?.gerente?'Carregue a planilha da revisão do mês na área do gerente.':'Peça ao gerente para carregar a planilha da revisão do mês.'}${S.func?.gerente?'<br><button class="btn red" id="goProd">Carregar planilha</button>':''}</div>`;
+    const g=$('#goProd'); if(g) g.onclick=()=>abrirMgr('prod');
+    return;
+  }
+  const q = norm($('#q').value).trim(), words=q.split(/\s+/).filter(Boolean);
+  const all = S.products.filter(p=>(S.cat==='' || (S.cat==='*fav'?inDaily(p):p.s===S.cat)) && words.every(w=>norm(p.n).includes(w)));
+  S.total=all.length; S.results=all.slice(0,60);
+  if(S.idx>=S.results.length) S.idx=0;
+  if(!S.results.length){
+    el.innerHTML = S.cat==='*fav' && !q ? `<div class="none">Nenhum produto na lista da manhã ainda. Toque na estrela de um produto para incluir.</div>`
+      : `<div class="none">Nenhum produto com “${esc($('#q').value)}”. Confira a grafia ou escolha outra categoria.</div>`;
+    return;
+  }
+  el.innerHTML = S.results.map((p,i)=>{
+    const t=tById(defaultType(p)), fav=inDaily(p);
+    return `<div class="pcard"><button class="pick" role="option" data-i="${i}" aria-selected="${S.sel===p}">
+      <span class="badge" style="background:${t.color}">${esc(metaTxt(p))}</span>
+      <span class="nm">${esc(p.n)}</span>
+      ${p.a?`<span class="st">${svg(I.gel,14)}${esc(p.a)}</span>`:''}
+    </button><button class="star" data-star="${i}" aria-pressed="${fav}" aria-label="${fav?'Tirar da':'Pôr na'} lista da manhã">${svg(I.fav,22)}</button></div>`;
+  }).join('') + (S.total>60?`<div class="more">Mostrando 60 de ${S.total}. Digite mais letras para achar mais rápido.</div>`:'');
+}
+function select(p){
+  S.sel=p; S.type=defaultType(p); S.qty=1;
+  $('#qtyOut').value=1; $('#pname').textContent=p.n;
+  renderChips(); renderPreview(true);
+  $('#addQueue').disabled=$('#printNow').disabled=$('#toggleDaily').disabled=false; updDailyBtn();
+}
+function renderChips(){
+  const p=S.sel, def=p?defaultType(p):null;
+  $('#chips').innerHTML = !p ? '<span class="hint">Toque num produto para ver as opções.</span>' : TYPES.filter(t=>{
+    if(t.fixo) return def===t.id;
+    if(t.id==='d') return p.k==='d';
+    return true;
+  }).map(t=>`<button class="chip" data-t="${t.id}" aria-pressed="${S.type===t.id}"><i class="dot" style="background:${t.color}"></i>${t.id==='d'?diasTxt(p.v):t.label}${t.id===def?' <small>(padrão)</small>':''}</button>`).join('');
+}
+function renderPreview(anim){
+  const el=$('#preview');
+  el.innerHTML = labelHTML(S.sel || {n:'Escolha um produto na lista',a:'',o:''}, S.sel?S.type:'usodia');
+  if(anim){el.classList.remove('anim');void el.offsetWidth;el.classList.add('anim')}
+}
+
+/* ================= Lista da manhã (salva na nuvem, igual para todos os computadores) ================= */
+let manhaTimer=null;
+function salvarManha(){
+  clearTimeout(manhaTimer);
+  manhaTimer=setTimeout(async()=>{
+    const {error}=await sb.from('etq_config').update({manha:S.manha, atualizado_em:new Date().toISOString()}).eq('loja_id',S.loja);
+    if(error) toast('Não consegui salvar a lista da manhã. Confira a internet.');
+  },400);
+}
+function toggleDaily(p,type,qty){
+  if(!p) return;
+  const i=S.manha.findIndex(d=>d.n===p.n);
+  if(i>=0){S.manha.splice(i,1);toast('Saiu da lista da manhã')}
+  else{S.manha.push({n:p.n,type:type||defaultType(p),qty:qty||1});toast('Entrou na lista da manhã ★')}
+  mudouManha();
+}
+function mudouManha(){ salvarManha(); renderDaily(); renderList(); renderCats(); updDailyBtn(); }
+const dailyItems = () => S.manha.map(d=>({d,p:S.products.find(p=>p.n===d.n)}));
+function updDailyBtn(){$('#toggleDaily').textContent = S.sel&&inDaily(S.sel) ? '★ Na lista da manhã' : '☆ Lista da manhã'}
+function renderDaily(){
+  const items=dailyItems(), total=items.filter(x=>x.p).reduce((s,x)=>s+x.d.qty,0);
+  $('#dProd').textContent=S.manha.length; $('#dEtq').textContent=total;
+  $('#printDailyTxt').textContent = total ? `Imprimir tudo (${total})` : 'Imprimir tudo';
+  $('#printDaily').disabled=!total; $('#dailyEmpty').hidden=!!S.manha.length;
+  $('#daily').innerHTML = items.map((x,i)=>{
+    const t=tById(x.d.type);
+    const sub = !x.p ? '<small class="miss">Saiu da planilha nova: marque o nome atualizado</small>' : `<small>${t.id==='d'?diasTxt(x.p.v):t.label}</small>`;
+    return `<li><i class="dot" style="background:${t.color}"></i><span class="name">${esc(x.d.n)}${sub}</span><button class="mini" data-dm="${i}" aria-label="Menos">−</button><span class="n num">${x.d.qty}</span><button class="mini" data-dp="${i}" aria-label="Mais">+</button><button class="mini" data-dr="${i}" aria-label="Remover">×</button></li>`;
+  }).join('');
+}
+
+/* ================= Impressão + registro na nuvem ================= */
+function doPrint(items, origem){
+  let st=document.getElementById('pageStyle');
+  if(!st){st=document.createElement('style');st.id='pageStyle';document.head.appendChild(st)}
+  st.textContent='@page{margin:0}';
+  $('#printArea').innerHTML = items.flatMap(it=>Array.from({length:it.qty},()=>labelHTML(it.p,it.type))).join('');
+  const n=items.reduce((s,i)=>s+i.qty,0), now=new Date();
+  renderPreview(true);
+  window.print();
+  const rows = items.map(it=>({loja_id:S.loja, impresso_em:now.toISOString(), funcionario_id:S.func?.id||null, funcionario_nome:S.func?.nome||null,
+    produto:it.p.n, validade:compute(it.p,it.type,now).val, tipo:it.type, qtd:it.qty, origem}));
+  registrar(rows);
+  S.hoje+=n; $('#countToday').textContent=S.hoje;
+  toast(`${n} etiqueta${n>1?'s':''} enviada${n>1?'s':''} para a impressora`);
+}
+// Se a internet cair, guarda e manda depois (o controle não se perde)
+async function registrar(rows){
+  const pend=store.get('etq-pend',[]).concat(rows); store.set('etq-pend',pend); await flushPend();
+}
+let flushing=false;
+async function flushPend(){
+  if(flushing) return; const pend=store.get('etq-pend',[]); if(!pend.length){$('#netWarn').hidden=true;return}
+  flushing=true;
+  const {error}=await sb.from('etq_impressoes').insert(pend);
+  flushing=false;
+  if(error){ $('#netWarn').hidden=false; return; }
+  store.set('etq-pend', store.get('etq-pend',[]).slice(pend.length)); $('#netWarn').hidden=true;
+}
+window.addEventListener('online',flushPend); setInterval(flushPend,60e3);
+
+async function atualizarContador(){
+  const d=new Date(); d.setHours(0,0,0,0);
+  const {data,error}=await sb.from('etq_impressoes').select('qtd').eq('loja_id',S.loja).gte('impresso_em',d.toISOString()).limit(5000);
+  if(error) return;
+  const pend=store.get('etq-pend',[]).filter(r=>new Date(r.impresso_em)>=d).reduce((s,r)=>s+r.qtd,0);
+  S.hoje=data.reduce((s,r)=>s+r.qtd,0)+pend; $('#countToday').textContent=S.hoje;
+}
+setInterval(()=>{ if(S.func) atualizarContador(); },120e3);
+
+function renderQueue(){
+  $('#queuePanel').hidden=!S.queue.length;
+  $('#queue').innerHTML=S.queue.map((it,i)=>`<li><i class="dot" style="background:${tById(it.type).color}"></i><span style="flex:1">${it.qty}× ${esc(it.p.n)}</span><button class="x" data-rm="${i}" aria-label="Remover">×</button></li>`).join('');
+}
+function tick(){
+  const d=new Date(), h=d.getHours(), nome=S.func?S.func.nome.split(' ')[0]:'equipe';
+  $('#clockTime').textContent=fTime(d);
+  $('#clockDate').textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  $('#greet').textContent=`${h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}, ${nome}`;
+}
+setInterval(()=>{ if(!$('#scrApp').hidden){tick();renderPreview(false)} },30e3);
+
+/* ================= Relatório ================= */
+const ORIG = {manha:'Lista da manhã', fila:'Fila', avulsa:'Avulsa'};
+const LOG = {rows:[], day:'', view:'hora'};
+function dayLabel(k){
+  const hoje=dayKey(new Date()), y=new Date(); y.setDate(y.getDate()-1);
+  if(k===hoje) return 'Hoje'; if(k===dayKey(y)) return 'Ontem';
+  const [,m,d]=k.split('-'); return `${d}/${m}`;
+}
+async function abrirLog(){
+  LOG.day=dayKey(new Date()); LOG.rows=[];
+  $('#logTable').innerHTML='<div class="lognone">Carregando…</div>'; $('#logDlg').showModal();
+  await flushPend();
+  const desde=new Date(); desde.setHours(0,0,0,0); desde.setDate(desde.getDate()-30);
+  const {data,error}=await sb.from('etq_impressoes').select('impresso_em,funcionario_nome,produto,validade,tipo,qtd,origem')
+    .eq('loja_id',S.loja).gte('impresso_em',desde.toISOString()).order('impresso_em',{ascending:false}).limit(10000);
+  if(error){ $('#logTable').innerHTML='<div class="lognone">Não consegui carregar o relatório. Confira a internet e abra de novo.</div>'; return; }
+  LOG.rows=data.map(r=>({...r, t:new Date(r.impresso_em)}));
+  renderLog();
+}
+const rowsOf = k => LOG.rows.filter(r=>dayKey(r.t)===k);
+function renderLog(){
+  const hoje=dayKey(new Date());
+  const keys=[...new Set([hoje,...LOG.rows.map(r=>dayKey(r.t))])].sort().reverse();
+  $('#logDays').innerHTML=keys.map(k=>`<button class="pill" data-day="${k}" aria-pressed="${k===LOG.day}">${dayLabel(k)}<small class="num">${rowsOf(k).reduce((s,r)=>s+r.qtd,0)}</small></button>`).join('');
+  const rows=rowsOf(LOG.day);
+  const [a,m,d]=LOG.day.split('-'), wd=new Date(+a,+m-1,+d).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  $('#logSub').textContent=wd.charAt(0).toUpperCase()+wd.slice(1);
+  $('#kEtq').textContent=rows.reduce((s,r)=>s+r.qtd,0);
+  $('#kProd').textContent=new Set(rows.map(r=>r.produto)).size;
+  $('#kFunc').textContent=new Set(rows.map(r=>r.funcionario_nome||'—')).size;
+  document.querySelectorAll('#logTabs .tab').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===LOG.view));
+  $('#copyLog').disabled=!rows.length;
+  if(!rows.length){$('#logTable').innerHTML=`<div class="lognone">Nenhuma etiqueta impressa ${LOG.day===hoje?'hoje ainda':'neste dia'}.</div>`;return}
+  const hr=t=>`<span class="hr">${fTime(t)}</span>`;
+  if(LOG.view==='hora'){
+    $('#logTable').innerHTML=`<table class="log"><thead><tr><th>Produto impresso</th><th>Quem</th><th>Como</th><th class="q">Qtd</th></tr></thead><tbody>${
+      rows.map(r=>`<tr><td><div class="pn">${hr(r.t)}${esc(r.produto)}</div><div class="pv">Validade: ${esc(r.validade)}</div></td><td class="who-t">${esc(r.funcionario_nome||'—')}</td><td><span class="orig ${esc(r.origem)}">${esc(ORIG[r.origem]||r.origem||'')}</span></td><td class="q">${r.qtd}</td></tr>`).join('')}</tbody></table>`;
+  } else {
+    const key = LOG.view==='prod' ? (r=>r.produto) : (r=>r.funcionario_nome||'—');
+    const g={}; rows.forEach(r=>{const k=key(r); (g[k]=g[k]||{k,q:0,hs:[],ps:new Set()}); g[k].q+=r.qtd; g[k].hs.push(r.t); g[k].ps.add(r.produto)});
+    const list=Object.values(g).sort((x,y)=>y.q-x.q);
+    $('#logTable').innerHTML = LOG.view==='prod'
+      ? `<table class="log"><thead><tr><th>Produto</th><th>Horários</th><th class="q">Etiquetas</th></tr></thead><tbody>${list.map(x=>`<tr><td class="pn">${esc(x.k)}</td><td class="hs">${x.hs.sort((a,b)=>a-b).map(hr).join('')}</td><td class="q">${x.q}</td></tr>`).join('')}</tbody></table>`
+      : `<table class="log"><thead><tr><th>Funcionário</th><th>Produtos diferentes</th><th>Horários</th><th class="q">Etiquetas</th></tr></thead><tbody>${list.map(x=>`<tr><td class="pn">${esc(x.k)}</td><td class="q" style="text-align:left">${x.ps.size}</td><td class="hs">${x.hs.sort((a,b)=>a-b).map(hr).join('')}</td><td class="q">${x.q}</td></tr>`).join('')}</tbody></table>`;
+  }
+}
+function logText(){
+  const rows=rowsOf(LOG.day).slice().sort((a,b)=>a.t-b.t), [a,m,d]=LOG.day.split('-');
+  return `Etiquetas impressas em ${d}/${m}/${a} - ${S.lojaNome} (total: ${rows.reduce((s,r)=>s+r.qtd,0)})\n`+
+    rows.map(r=>`${fTime(r.t)} - ${r.qtd}x ${r.produto} (val. ${r.validade}) - ${r.funcionario_nome||'—'} [${ORIG[r.origem]||r.origem}]`).join('\n');
+}
+$('#openLog').onclick=abrirLog;
+$('#logDays').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(b){LOG.day=b.dataset.day;renderLog()}});
+$('#logTabs').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){LOG.view=b.dataset.view;renderLog()}});
+$('#copyLog').onclick=async()=>{
+  const txt=logText();
+  try{await navigator.clipboard.writeText(txt);toast('Lista copiada. É só colar no WhatsApp ou e-mail.')}
+  catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Lista copiada.')}catch(_){toast('Não consegui copiar.')}ta.remove()}
+};
+
+/* ================= Área do gerente ================= */
+function abrirMgr(tab='func'){
+  if(!S.func?.gerente) return;
+  $('#mgrSub').textContent=`${S.lojaNome} · ${S.func.nome}`;
+  mgrTab(tab); renderFuncs(); renderProdInfo();
+  $('#labelH').value=S.altura; $('#contaInfo').textContent=`Conectado como ${S.user.email}.`; $('#logoutConfirm').hidden=true;
+  $('#mgrDlg').showModal();
+}
+function mgrTab(t){
+  document.querySelectorAll('#mgrTabs [data-mt]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mt===t));
+  document.querySelectorAll('#mgrDlg [data-mp]').forEach(p=>p.hidden=p.dataset.mp!==t);
+}
+$('#openMgr').onclick=()=>abrirMgr('func');
+$('#mgrTabs').addEventListener('click',e=>{const b=e.target.closest('[data-mt]');if(b)mgrTab(b.dataset.mt)});
+
+function renderFuncs(){
+  const lista=S.funcs.slice().sort((a,b)=>(b.ativo-a.ativo)||a.nome.localeCompare(b.nome));
+  $('#flist').innerHTML=lista.map(f=>`<li data-id="${esc(f.id)}">
+    <span class="fn"><span class="avatar" style="width:34px;height:34px;font-size:.85rem">${esc(ini(f.nome))}</span>${esc(f.nome)} ${f.gerente?'<span class="tagg">gerente</span>':''} ${f.ativo?'':'<span class="tagg off">desativado</span>'}</span>
+    <button class="btn sm" data-act="pin">Trocar PIN</button>
+    <button class="btn sm" data-act="ger">${f.gerente?'Tirar gerente':'Tornar gerente'}</button>
+    <button class="btn sm" data-act="ativo">${f.ativo?'Desativar':'Reativar'}</button>
+    <span class="pinrow" hidden><input class="newpin" inputmode="numeric" maxlength="4" placeholder="Novo PIN" style="width:110px;border:2px solid var(--line);border-radius:10px;padding:7px 10px"> <button class="btn sm dark" data-act="savepin">Salvar</button></span>
+  </li>`).join('');
+}
+$('#flist').addEventListener('click', async e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const li=b.closest('li'), f=S.funcs.find(x=>x.id===li.dataset.id), act=b.dataset.act;
+  const gerentesAtivos=S.funcs.filter(x=>x.gerente&&x.ativo).length;
+  let patch=null;
+  if(act==='pin'){ li.querySelector('.pinrow').hidden=false; li.querySelector('.newpin').focus(); return; }
+  if(act==='savepin'){ const v=li.querySelector('.newpin').value.trim(); if(!/^\d{4}$/.test(v)){toast('O PIN precisa ter 4 números.');return} patch={pin:await hashPin(S.loja,v)}; }
+  if(act==='ger'){ if(f.gerente && f.ativo && gerentesAtivos<=1){toast('A loja precisa ter pelo menos um gerente.');return} patch={gerente:!f.gerente}; }
+  if(act==='ativo'){ if(f.ativo && f.gerente && gerentesAtivos<=1){toast('A loja precisa ter pelo menos um gerente ativo.');return} patch={ativo:!f.ativo}; }
+  const {error}=await sb.from('etq_funcionarios').update(patch).eq('id',f.id);
+  if(error){toast('Não consegui salvar. Confira a internet.');return}
+  Object.assign(f,patch); renderFuncs(); toast(act==='savepin'?`PIN de ${f.nome} trocado`:'Salvo');
+  if(f.id===S.func.id){ S.func=f; $('#openMgr').hidden=!f.gerente; if(!f.ativo||!f.gerente){$('#mgrDlg').close(); if(!f.ativo) quem();} }
+});
+$('#fAdd').addEventListener('submit', async e=>{
+  e.preventDefault(); $('#addErr').textContent='';
+  const nome=$('#addNome').value.trim(), pin=$('#addPin').value.trim();
+  if(!/^\d{4}$/.test(pin)){ $('#addErr').textContent='O PIN precisa ter 4 números.'; return; }
+  if(S.funcs.some(f=>norm(f.nome)===norm(nome)&&f.ativo)){ $('#addErr').textContent='Já existe alguém com esse nome. Use também o sobrenome.'; return; }
+  const {data,error}=await sb.from('etq_funcionarios').insert({loja_id:S.loja,nome,pin:await hashPin(S.loja,pin),gerente:$('#addGer').checked}).select('id,nome,pin,gerente,ativo').single();
+  if(error){ $('#addErr').textContent='Não consegui cadastrar. Confira a internet.'; return; }
+  S.funcs.push(data); renderFuncs(); e.target.reset(); toast(`${data.nome} cadastrado`); $('#addNome').focus();
+});
+
+function renderProdInfo(){
+  const b=S.baseInfo;
+  $('#prodInfo').textContent = b ? `${b.nome_revisao}: ${S.products.length} produtos. Atualizada em ${fDate(new Date(b.atualizado_em))} às ${fTime(new Date(b.atualizado_em))}${b.atualizado_por?' por '+b.atualizado_por:''}.` : 'Nenhuma lista carregada ainda.';
+}
+function secName(t){
+  const u=norm(t), m=u.match(/(\d+)\s*hora/);
+  if(u.includes('marinando')) return 'Marinando (16h)';
+  if(m) return `Validade ${m[1]}h`;
+  for(const [k,v] of [['pista fria cozinha','Pista fria cozinha'],['pista fria sushi','Pista fria sushi'],['geladeira gn','Geladeira GN'],['uso do dia','Uso do dia'],['quimic','Produtos químicos'],['colaborador','Colaboradores'],['1 dia ou mais','Validade em dias']]) if(u.includes(k)) return v;
+  return String(t).trim();
+}
+function importRows(rows){
+  const up = v => norm(v).toUpperCase().trim();
+  const h = rows.findIndex(r=>r.some(c=>up(c)==='VALIDADE') && r.some(c=>up(c).startsWith('ARMAZENAMENTO')));
+  if(h<0) throw new Error('Não achei as colunas VALIDADE e ARMAZENAMENTO.');
+  const head=rows[h].map(up);
+  const cV=head.indexOf('VALIDADE'), cA=head.findIndex(c=>c.startsWith('ARMAZENAMENTO'));
+  const cO=head.findIndex(c=>c.startsWith('RASTREABILIDADE')||c.startsWith('OBSERVA'));
+  let cN=head.findIndex(c=>c.includes('PRODUTO')); if(cN<0) cN=0;
+  const out=[]; let sec='';
+  for(const r of rows.slice(h+1)){
+    const n=String(r[cN]??'').replace(/\s+/g,' ').trim(), v=r[cV];
+    if(!n) continue;
+    if(v===''||v==null){ if(!norm(n).includes('verificar')) sec=secName(n); continue; }
+    const p={n, s:sec, a:String(r[cA]??'').trim().toLowerCase(), o:cO>=0?String(r[cO]??'').trim():''};
+    const hm=norm(n).match(/(\d+)\s*hora/)||norm(sec).match(/(\d+)\s*hora/)||norm(sec).match(/(\d+)h\)?$/);
+    const num=typeof v==='number'?v:(/^\s*\d+([.,]\d+)?\s*$/.test(v)?parseFloat(String(v).replace(',','.')):NaN);
+    if(!isNaN(num)){ if(hm){p.k='h';p.v=+hm[1]} else if(num===0){p.k='usodia'} else {p.k='d';p.v=num} }
+    else { p.k=norm(v).includes('fabric')?'fab':'sem'; }
+    out.push(p);
+  }
+  if(!out.length) throw new Error('A planilha foi lida, mas nenhum produto tinha validade preenchida.');
+  return out;
+}
+$('#file').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f) return; const msg=$('#importMsg'); msg.textContent='Lendo a planilha…';
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array'}); let best=null;
+    for(const name of wb.SheetNames){ try{const ps=importRows(XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:''})); if(!best||ps.length>best.ps.length) best={name,ps}}catch(_){} }
+    if(!best) throw new Error('Não achei as colunas VALIDADE e ARMAZENAMENTO em nenhuma aba.');
+    const reg={loja_id:S.loja, nome_revisao:`${f.name.replace(/\.[^.]+$/,'')} (aba ${best.name})`, produtos:best.ps, atualizado_em:new Date().toISOString(), atualizado_por:S.func.nome};
+    msg.textContent='Salvando para todos os computadores…';
+    const {error}=await sb.from('etq_produtos').upsert(reg);
+    if(error) throw new Error('Não consegui salvar na nuvem. Confira a internet.');
+    S.products=best.ps; S.baseNome=reg.nome_revisao; S.baseInfo=reg; S.sel=null;
+    const sumiram=S.manha.filter(d=>!S.products.some(p=>p.n===d.n)).length;
+    msg.textContent=`Pronto: ${S.products.length} produtos da aba ${best.name}.${sumiram?` Atenção: ${sumiram} produto(s) da lista da manhã mudaram de nome e aparecem em vermelho.`:''}`;
+    renderProdInfo(); renderTudo();
+  }catch(err){ msg.textContent=err.message||'Não consegui ler esse arquivo.'; }
+  e.target.value='';
+});
+$('#fAlt').addEventListener('submit', async e=>{
+  e.preventDefault(); const v=Math.min(80,Math.max(15,+$('#labelH').value||25));
+  const {error}=await sb.from('etq_config').update({altura_mm:v}).eq('loja_id',S.loja);
+  if(error){toast('Não consegui salvar. Confira a internet.');return}
+  S.altura=v; renderPreview(false); toast(`Altura salva: ${v} mm`);
+});
+$('#btnLogout').onclick=()=>$('#logoutConfirm').hidden=false;
+$('#logoutNo').onclick=()=>$('#logoutConfirm').hidden=true;
+$('#logoutYes').onclick=async()=>{await sb.auth.signOut();store.del('etq-func');location.reload()};
+
+/* ================= Eventos da tela principal ================= */
+$('#q').addEventListener('input',()=>{S.idx=0;renderList()});
+$('#q').addEventListener('keydown',e=>{
+  if(!S.results.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();S.idx=Math.min(S.idx+1,S.results.length-1);select(S.results[S.idx]);renderList()}
+  else if(e.key==='ArrowUp'){e.preventDefault();S.idx=Math.max(S.idx-1,0);select(S.results[S.idx]);renderList()}
+  else if(e.key==='Enter'){e.preventDefault();if(S.sel!==S.results[S.idx])select(S.results[S.idx]);renderList();doPrint([{p:S.sel,type:S.type,qty:S.qty}],'avulsa')}
+});
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(!b)return;S.cat=b.dataset.cat;S.idx=0;renderCats();renderList();$('#q').focus()});
+$('#list').addEventListener('click',e=>{
+  const s=e.target.closest('[data-star]'); if(s){toggleDaily(S.results[+s.dataset.star]);return}
+  const b=e.target.closest('[data-i]'); if(!b)return; S.idx=+b.dataset.i; select(S.results[S.idx]); renderList();
+});
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.type=b.dataset.t;renderChips();renderPreview(false)});
+$('#minus').onclick=()=>{S.qty=Math.max(1,S.qty-1);$('#qtyOut').value=S.qty};
+$('#plus').onclick=()=>{S.qty=Math.min(50,S.qty+1);$('#qtyOut').value=S.qty};
+$('#toggleDaily').onclick=()=>toggleDaily(S.sel,S.type,S.qty);
+$('#printDaily').onclick=()=>{ const ok=dailyItems().filter(x=>x.p); if(!ok.length){toast('A lista da manhã está vazia.');return} doPrint(ok.map(x=>({p:x.p,type:x.d.type,qty:x.d.qty})),'manha'); };
+$('#toggleBox').onclick=()=>{const box=$('#dailyBox'),open=box.hidden;box.hidden=!open;$('#toggleBox').setAttribute('aria-expanded',open);$('#toggleBox').textContent=open?'Fechar a lista':'Ver e editar a lista'};
+$('#daily').addEventListener('click',e=>{
+  const m=e.target.closest('[data-dm]'),p=e.target.closest('[data-dp]'),r=e.target.closest('[data-dr]');
+  if(m){const d=S.manha[+m.dataset.dm];d.qty=Math.max(1,d.qty-1)}
+  else if(p){const d=S.manha[+p.dataset.dp];d.qty=Math.min(50,d.qty+1)}
+  else if(r){S.manha.splice(+r.dataset.dr,1)}
+  else return;
+  mudouManha();
+});
+$('#printNow').onclick=()=>S.sel&&doPrint([{p:S.sel,type:S.type,qty:S.qty}],'avulsa');
+$('#addQueue').onclick=()=>{if(!S.sel)return;S.queue.push({p:S.sel,type:S.type,qty:S.qty});renderQueue();toast('Adicionado à fila');$('#q').select()};
+$('#queue').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b){S.queue.splice(+b.dataset.rm,1);renderQueue()}});
+$('#clearQueue').onclick=()=>{S.queue=[];renderQueue()};
+$('#printQueue').onclick=()=>{if(!S.queue.length)return;doPrint(S.queue,'fila');S.queue=[];renderQueue()};
+
+/* ================= Início ================= */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ S.func=null; show('scrLogin'); } });
+boot();
+}
+</script>
+</body>
+</html>
